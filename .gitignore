@@ -1,0 +1,9 @@
+log*
+bin/
+out/
+*.db
+*.iml
+.idea/
+.DS_Store
+*.zip
+dist/
