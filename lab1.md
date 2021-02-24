@@ -49,7 +49,7 @@ bug fixes, new commits to the HW repo, etc., as bugs and issues are reported.
 ## 0. Environment Setup
 
 **Start by downloading the code for lab 1 from the course GitHub repository by following the
-instructions [here](https://github.com/MIT-DB-Class/course-info-2018).**
+instructions [here](https://github.com/MIT-DB-Class/simple-db-hw-2021).**
 
 These instructions are written for Athena or any other Unix-based platform (e.g., Linux, MacOS, etc.)  Because the code
 is written in Java, it should work under Windows as well, although the directions in this document may not apply.
