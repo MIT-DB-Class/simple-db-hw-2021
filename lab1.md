@@ -2,7 +2,7 @@
 
 **Assigned: Wed, Feb 24**
 
-**Due: Tue, Mar 10 11:59 PM EDT**
+**Due: Wed, Mar 10 11:59 PM EDT**
 
 
 <!--
