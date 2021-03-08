@@ -30,7 +30,7 @@ public class HeapPageId implements PageId {
     }
 
     /**
-     * @return a hash code for this page, represented by the concatenation of
+     * @return a hash code for this page, represented by a combination of
      *   the table number and the page number (needed if a PageId is used as a
      *   key in a hash table in the BufferPool, for example.)
      * @see BufferPool
