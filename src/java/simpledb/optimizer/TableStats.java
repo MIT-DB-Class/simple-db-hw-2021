@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * TableStats represents statistics (e.g., histograms) about base tables in a
@@ -20,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TableStats {
 
-    private static final ConcurrentHashMap<String, TableStats> statsMap = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, TableStats> statsMap = new ConcurrentHashMap<>();
 
     static final int IOCOSTPERPAGE = 1000;
 
@@ -32,7 +33,7 @@ public class TableStats {
         statsMap.put(tablename, stats);
     }
     
-    public static void setStatsMap(HashMap<String,TableStats> s)
+    public static void setStatsMap(Map<String,TableStats> s)
     {
         try {
             java.lang.reflect.Field statsMapF = TableStats.class.getDeclaredField("statsMap");

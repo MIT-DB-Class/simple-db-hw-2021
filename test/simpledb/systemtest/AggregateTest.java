@@ -58,7 +58,7 @@ public class AggregateTest extends SimpleDbTestBase {
 
     private List<List<Integer>> aggregate(List<List<Integer>> tuples, Aggregator.Op operation, int groupColumn) {
         // Group the values
-        HashMap<Integer, List<Integer>> values = new HashMap<>();
+        Map<Integer, List<Integer>> values = new HashMap<>();
         for (List<Integer> t : tuples) {
             Integer key = null;
             if (groupColumn != Aggregator.NO_GROUPING) key = t.get(groupColumn);

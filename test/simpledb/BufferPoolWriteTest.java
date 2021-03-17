@@ -98,7 +98,7 @@ public class BufferPoolWriteTest extends TestUtil.CreateHeapFile {
     	DbFileIterator it = hf.iterator(tid);
     	it.open();
     	
-    	ArrayList<Tuple> tuples = new ArrayList<>();
+    	List<Tuple> tuples = new ArrayList<>();
     	while(it.hasNext()) {
     		tuples.add(it.next());
     	}

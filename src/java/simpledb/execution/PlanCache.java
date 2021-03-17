@@ -3,14 +3,15 @@ import simpledb.optimizer.LogicalJoinNode;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /** A PlanCache is a helper class that can be used to store the best
  * way to order a given set of joins */
 public class PlanCache {
-    final HashMap<Set<LogicalJoinNode>,List<LogicalJoinNode>> bestOrders= new HashMap<>();
-    final HashMap<Set<LogicalJoinNode>,Double> bestCosts= new HashMap<>();
-    final HashMap<Set<LogicalJoinNode>,Integer> bestCardinalities = new HashMap<>();
+    final Map<Set<LogicalJoinNode>,List<LogicalJoinNode>> bestOrders= new HashMap<>();
+    final Map<Set<LogicalJoinNode>,Double> bestCosts= new HashMap<>();
+    final Map<Set<LogicalJoinNode>,Integer> bestCardinalities = new HashMap<>();
     
     /** Add a new cost, cardinality and ordering for a particular join set.  Does not verify that the
         new cost is less than any previously added cost -- simply adds or replaces an existing plan for the

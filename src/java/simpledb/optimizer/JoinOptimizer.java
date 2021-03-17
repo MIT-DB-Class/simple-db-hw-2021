@@ -218,10 +218,13 @@ public class JoinOptimizer {
      *             join, or or when another internal error occurs
      */
     public List<LogicalJoinNode> orderJoins(
-            HashMap<String, TableStats> stats,
-            HashMap<String, Double> filterSelectivities, boolean explain)
+            Map<String, TableStats> stats,
+            Map<String, Double> filterSelectivities, boolean explain)
             throws ParsingException {
         //Not necessary for labs 1--3
+
+        // See the Lab 3 writeup for some hints as to how this function
+        // should work.
 
         // some code goes here
         //Replace the following
@@ -262,8 +265,8 @@ public class JoinOptimizer {
      */
     @SuppressWarnings("unchecked")
     private CostCard computeCostAndCardOfSubplan(
-            HashMap<String, TableStats> stats,
-            HashMap<String, Double> filterSelectivities,
+            Map<String, TableStats> stats,
+            Map<String, Double> filterSelectivities,
             LogicalJoinNode joinToRemove, Set<LogicalJoinNode> joinSet,
             double bestCostSoFar, PlanCache pc) throws ParsingException {
 
@@ -283,8 +286,7 @@ public class JoinOptimizer {
         String table1Alias = j.t1Alias;
         String table2Alias = j.t2Alias;
 
-        Set<LogicalJoinNode> news = (Set<LogicalJoinNode>) ((HashSet<LogicalJoinNode>) joinSet)
-                .clone();
+        Set<LogicalJoinNode> news = new HashSet<>(joinSet);
         news.remove(j);
 
         double t1cost, t2cost;
@@ -292,7 +294,7 @@ public class JoinOptimizer {
         boolean leftPkey, rightPkey;
 
         if (news.isEmpty()) { // base case -- both are base relations
-            prevBest = new Vector<>();
+            prevBest = new ArrayList<>();
             t1cost = stats.get(table1Name).estimateScanCost();
             t1card = stats.get(table1Name).estimateTableCardinality(
                     filterSelectivities.get(j.t1Alias));
@@ -439,8 +441,8 @@ public class JoinOptimizer {
      *            alias is given)
      */
     private void printJoins(List<LogicalJoinNode> js, PlanCache pc,
-            HashMap<String, TableStats> stats,
-            HashMap<String, Double> selectivities) {
+            Map<String, TableStats> stats,
+            Map<String, Double> selectivities) {
 
         JFrame f = new JFrame("Join Plan for " + p.getQuery());
 
@@ -452,7 +454,7 @@ public class JoinOptimizer {
 
         f.setSize(300, 500);
 
-        HashMap<String, DefaultMutableTreeNode> m = new HashMap<>();
+        Map<String, DefaultMutableTreeNode> m = new HashMap<>();
 
         // int numTabs = 0;
 

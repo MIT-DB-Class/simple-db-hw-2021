@@ -66,7 +66,7 @@ public class Parser {
         } else {
             // this is a binary expression comparing two constants
             @SuppressWarnings("unchecked")
-            Vector<ZExp> ops = wx.getOperands();
+            List<ZExp> ops = wx.getOperands();
             if (ops.size() != 2) {
                 throw new simpledb.ParsingException(
                         "Only simple binary expresssions of the form A op B are currently supported.");
@@ -75,20 +75,20 @@ public class Parser {
             boolean isJoin = false;
             Predicate.Op op = getOp(wx.getOperator());
 
-            boolean op1const = ops.elementAt(0) instanceof ZConstant; // otherwise
+            boolean op1const = ops.get(0) instanceof ZConstant; // otherwise
                                                                       // is a
                                                                       // Query
-            boolean op2const = ops.elementAt(1) instanceof ZConstant; // otherwise
+            boolean op2const = ops.get(1) instanceof ZConstant; // otherwise
                                                                       // is a
                                                                       // Query
             if (op1const && op2const) {
-                isJoin = ((ZConstant) ops.elementAt(0)).getType() == ZConstant.COLUMNNAME
-                        && ((ZConstant) ops.elementAt(1)).getType() == ZConstant.COLUMNNAME;
-            } else if (ops.elementAt(0) instanceof ZQuery
-                    || ops.elementAt(1) instanceof ZQuery) {
+                isJoin = ((ZConstant) ops.get(0)).getType() == ZConstant.COLUMNNAME
+                        && ((ZConstant) ops.get(1)).getType() == ZConstant.COLUMNNAME;
+            } else if (ops.get(0) instanceof ZQuery
+                    || ops.get(1) instanceof ZQuery) {
                 isJoin = true;
-            } else if (ops.elementAt(0) instanceof ZExpression
-                    || ops.elementAt(1) instanceof ZExpression) {
+            } else if (ops.get(0) instanceof ZExpression
+                    || ops.get(1) instanceof ZExpression) {
                 throw new simpledb.ParsingException(
                         "Only simple binary expresssions of the form A op B are currently supported, where A or B are fields, constants, or subqueries.");
             } else
@@ -102,26 +102,26 @@ public class Parser {
                     // generate a virtual table for the left op
                     // this isn't a valid ZQL query
                 } else {
-                    tab1field = ((ZConstant) ops.elementAt(0)).getValue();
+                    tab1field = ((ZConstant) ops.get(0)).getValue();
 
                 }
 
                 if (!op2const) { // right op is a nested query
                     LogicalPlan sublp = parseQueryLogicalPlan(tid,
-                            (ZQuery) ops.elementAt(1));
+                            (ZQuery) ops.get(1));
                     OpIterator pp = sublp.physicalPlan(tid,
                             TableStats.getStatsMap(), explain);
                     lp.addJoin(tab1field, pp, op);
                 } else {
-                    tab2field = ((ZConstant) ops.elementAt(1)).getValue();
+                    tab2field = ((ZConstant) ops.get(1)).getValue();
                     lp.addJoin(tab1field, tab2field, op);
                 }
 
             } else { // select node
                 String column;
                 String compValue;
-                ZConstant op1 = (ZConstant) ops.elementAt(0);
-                ZConstant op2 = (ZConstant) ops.elementAt(1);
+                ZConstant op1 = (ZConstant) ops.get(0);
+                ZConstant op2 = (ZConstant) ops.get(1);
                 if (op1.getType() == ZConstant.COLUMNNAME) {
                     column = op1.getValue();
                     compValue = op2.getValue();
@@ -140,12 +140,12 @@ public class Parser {
     public LogicalPlan parseQueryLogicalPlan(TransactionId tid, ZQuery q)
             throws IOException, Zql.ParseException, simpledb.ParsingException {
         @SuppressWarnings("unchecked")
-        Vector<ZFromItem> from = q.getFrom();
+        List<ZFromItem> from = q.getFrom();
         LogicalPlan lp = new LogicalPlan();
         lp.setQuery(q.toString());
         // walk through tables in the FROM clause
         for (int i = 0; i < from.size(); i++) {
-            ZFromItem fromIt = from.elementAt(i);
+            ZFromItem fromIt = from.get(i);
             try {
 
                 int id = Database.getCatalog().getTableId(fromIt.getTable()); // will
@@ -190,13 +190,13 @@ public class Parser {
         String groupByField = null;
         if (gby != null) {
             @SuppressWarnings("unchecked")
-            Vector<ZExp> gbs = gby.getGroupBy();
+            List<ZExp> gbs = gby.getGroupBy();
             if (gbs.size() > 1) {
                 throw new simpledb.ParsingException(
                         "At most one grouping field expression supported.");
             }
             if (gbs.size() == 1) {
-                ZExp gbe = gbs.elementAt(0);
+                ZExp gbe = gbs.get(0);
                 if (!(gbe instanceof ZConstant)) {
                     throw new simpledb.ParsingException(
                             "Complex grouping expressions (" + gbe
@@ -211,12 +211,12 @@ public class Parser {
         // walk the select list, pick out aggregates, and check for query
         // validity
         @SuppressWarnings("unchecked")
-        Vector<ZSelectItem> selectList = q.getSelect();
+        List<ZSelectItem> selectList = q.getSelect();
         String aggField = null;
         String aggFun = null;
 
         for (int i = 0; i < selectList.size(); i++) {
-            ZSelectItem si = selectList.elementAt(i);
+            ZSelectItem si = selectList.get(i);
             if (si.getAggregate() == null
                     && (si.isExpression() && !(si.getExpression() instanceof ZConstant))) {
                 throw new simpledb.ParsingException(
@@ -257,12 +257,12 @@ public class Parser {
 
         if (q.getOrderBy() != null) {
             @SuppressWarnings("unchecked")
-            Vector<ZOrderBy> obys = q.getOrderBy();
+            List<ZOrderBy> obys = q.getOrderBy();
             if (obys.size() > 1) {
                 throw new simpledb.ParsingException(
                         "Multi-attribute ORDER BY is not supported.");
             }
-            ZOrderBy oby = obys.elementAt(0);
+            ZOrderBy oby = obys.get(0);
             if (!(oby.getExpression() instanceof ZConstant)) {
                 throw new simpledb.ParsingException(
                         "Complex ORDER BY's are not supported");
@@ -340,7 +340,7 @@ public class Parser {
 
         if (s.getValues() != null) {
             @SuppressWarnings("unchecked")
-            Vector<ZExp> values = (Vector<ZExp>) s.getValues();
+            List<ZExp> values = s.getValues();
             if (td.numFields() != values.size()) {
                 throw new simpledb.ParsingException(
                         "INSERT statement does not contain same number of fields as table "

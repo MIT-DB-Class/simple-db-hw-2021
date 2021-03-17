@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -23,7 +24,7 @@ public class JoinTest extends SimpleDbTestBase {
             int table2Rows)
             throws IOException, DbException, TransactionAbortedException {
         // Create the two tables
-        HashMap<Integer, Integer> columnSpecification = new HashMap<>();
+        Map<Integer, Integer> columnSpecification = new HashMap<>();
         columnSpecification.put(0, table1ColumnValue);
         List<List<Integer>> t1Tuples = new ArrayList<>();
         HeapFile table1 = SystemTestUtil.createRandomHeapFile(

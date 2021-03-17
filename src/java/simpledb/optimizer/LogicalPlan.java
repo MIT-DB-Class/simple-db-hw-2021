@@ -28,8 +28,8 @@ public class LogicalPlan {
     private List<LogicalJoinNode> joins;
     private final List<LogicalScanNode> tables;
     private final List<LogicalFilterNode> filters;
-    private final HashMap<String, OpIterator> subplanMap;
-    private final HashMap<String,Integer> tableMap;
+    private final Map<String, OpIterator> subplanMap;
+    private final Map<String,Integer> tableMap;
 
     private final List<LogicalSelectListNode> selectList;
     private String groupByField = null;
@@ -43,13 +43,13 @@ public class LogicalPlan {
 
     /** Constructor -- generate an empty logical plan */
     public LogicalPlan() {
-        joins = new Vector<>();
-        filters = new Vector<>();
-        tables = new Vector<>();
+        joins = new ArrayList<>();
+        filters = new ArrayList<>();
+        tables = new ArrayList<>();
         subplanMap = new HashMap<>();
         tableMap = new HashMap<>();
 
-        selectList = new Vector<>();
+        selectList = new ArrayList<>();
         this.query = "";
     }
 
@@ -79,7 +79,7 @@ public class LogicalPlan {
         return tableMap.get(alias);
     }
     
-    public HashMap<String,Integer> getTableAliasToIdMapping()
+    public Map<String,Integer> getTableAliasToIdMapping()
     {
         return this.tableMap;
     }
@@ -289,9 +289,9 @@ public class LogicalPlan {
      */ 
     public OpIterator physicalPlan(TransactionId t, Map<String,TableStats> baseTableStats, boolean explain) throws ParsingException {
         Iterator<LogicalScanNode> tableIt = tables.iterator();
-        HashMap<String,String> equivMap = new HashMap<>();
-        HashMap<String,Double> filterSelectivities = new HashMap<>();
-        HashMap<String,TableStats> statsMap = new HashMap<>();
+        Map<String,String> equivMap = new HashMap<>();
+        Map<String,Double> filterSelectivities = new HashMap<>();
+        Map<String,TableStats> statsMap = new HashMap<>();
 
         while (tableIt.hasNext()) {
             LogicalScanNode table = tableIt.next();
@@ -485,7 +485,7 @@ public class LogicalPlan {
 
         TupleDesc td = new TupleDesc(types, names);
         TableStats ts;
-        HashMap<String, TableStats> tableMap = new HashMap<>();
+        Map<String, TableStats> tableMap = new HashMap<>();
 
         // create the tables, associate them with the data files
         // and tell the catalog about the schema  the tables.

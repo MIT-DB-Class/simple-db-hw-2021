@@ -93,7 +93,7 @@ public class LogFile {
 //    int pageSize;
     int totalRecords = 0; // for PatchTest //protected by this
 
-    final HashMap<Long,Long> tidToFirstLogRecord = new HashMap<>();
+    final Map<Long,Long> tidToFirstLogRecord = new HashMap<>();
 
     /** Constructor.
         Initialize and back the log file with the specified file.
