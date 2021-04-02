@@ -680,7 +680,8 @@ repeatedly calls `hasNext` and `next` on the `SeqScan` operator. As tuples are o
 printed out on the command line.
 
 We **strongly recommend** you try this out as a fun end-to-end test that will help you get experience writing your own
-test programs for simpledb. You should create the file "test.java" in the src/simpledb directory with the code above,
+test programs for simpledb. You should create the file "test.java" in the src/java/simpledb directory with the code above, 
+and you should add some "import" statement above the code, 
 and place the `some_data_file.dat` file in the top level directory. Then run:
 
 ```
