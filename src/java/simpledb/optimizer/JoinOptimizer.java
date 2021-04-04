@@ -221,7 +221,7 @@ public class JoinOptimizer {
             Map<String, TableStats> stats,
             Map<String, Double> filterSelectivities, boolean explain)
             throws ParsingException {
-        //Not necessary for labs 1--3
+        // Not necessary for labs 1--2
 
         // See the Lab 3 writeup for some hints as to how this function
         // should work.
