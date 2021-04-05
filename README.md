@@ -13,6 +13,9 @@ projects. In our case, your code will be in a private repository that is visible
 This document describes what you need to do to get started with git, and also download and upload 6.830/6.814 labs via
 GitHub.
 
+**If you are not a registered student at MIT, you are welcome to follow along, but we ask you to please keep your solution PRIVATE and not make it
+publicly available**
+
 ## Contents
 
 - [Learning Git](#learning-git)
