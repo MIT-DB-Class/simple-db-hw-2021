@@ -25,7 +25,6 @@ for this lab that are not in the original code distribution you received. We rei
 that the unit tests we provide are to help guide your implementation along,
 but they are not intended to be comprehensive or to establish correctness.
 
-
 You will need to add these new files to your release. The easiest way
 to do this is to change to your project directory (probably called simple-db-hw)
 and pull from the master GitHub repository:
@@ -57,7 +56,7 @@ as a part of a single, indivisible action.
 
 To help you understand
 how transaction management works in SimpleDB, we briefly review how
-it  ensures that the ACID properties are satisfied:
+it ensures that the ACID properties are satisfied:
 
 * **Atomicity**:  Strict two-phase locking and careful buffer management
   ensure atomicity.</li>
@@ -80,8 +79,7 @@ As we discussed in class, this means that:
    are locked by an uncommitted transaction (this is NO STEAL).
 *  On transaction commit, you should force dirty pages to disk (e.g.,
    write the pages out) (this is FORCE).
-
-
+   
 To further simplify your life, you may assume that SimpleDB will not crash
 while processing a `transactionComplete` command.  Note that
 these three points mean that you do not need to implement log-based
@@ -97,11 +95,11 @@ exclusive) lock on a specific object on behalf of a specific
 transaction.
 
 We recommend locking at *page* granularity; please do not
-implement table-level locking (even though it is possible). The rest of this document
-and our unit tests assume page-level locking.
+implement table-level locking (even though it is possible) for simplicity of testing. The rest
+of this document and our unit tests assume page-level locking.
 
 You will need to create data structures that keep track of which locks
-each transaction holds and that check to see if a lock should be granted
+each transaction holds and check to see if a lock should be granted
 to a transaction when it is requested.
 
 You will need to implement shared and exclusive locks; recall that these
@@ -132,12 +130,12 @@ you are using page-level locking, you will need to complete the following:
 
 *  Modify <tt>getPage()</tt> to block and acquire the desired lock
    before returning a page.
-*  Implement <tt>releasePage()</tt>.  This method is primarily used
+*  Implement <tt>unsafeReleasePage()</tt>.  This method is primarily used
    for testing, and at the end of transactions.
 *  Implement <tt>holdsLock()</tt> so that logic in Exercise 2 can
    determine whether a page is already locked by a transaction.
 
-You may find it helpful to define a class that is responsible for
+You may find it helpful to define a <tt>LockManager</tt> class that is responsible for
 maintaining state about transactions and locks, but the design decision is up to
 you.
 
@@ -173,7 +171,7 @@ Note that your implementation of `HeapFile.insertTuple()`
 and `HeapFile.deleteTuple()`, as well as the implementation
 of the iterator returned by `HeapFile.iterator()` should
 access pages using `BufferPool.getPage()`. Double check
-that that these different uses of `getPage()` pass the
+that these different uses of `getPage()` pass the
 correct permissions object (e.g., `Permissions.READ_WRITE`
 or `Permissions.READ_ONLY`). You may also wish to double
 check that your implementation of
@@ -302,40 +300,37 @@ understand why, we recommend reading about deadlocks in Ramakrishnan & Gehrke).
 You will need to detect this situation and throw a
 `TransactionAbortedException`.
 
-There are many possible ways to detect deadlock. For example, you may
+There are many possible ways to detect deadlock. A strawman example would be to
 implement a simple timeout policy that aborts a transaction if it has not
-completed after a given period of time. Alternately, you may implement
-cycle-detection in a dependency graph data structure. In this scheme, you
-would check for cycles in a dependency graph whenever you attempt to grant
-a new lock, and abort something if a cycle exists.
-
-After you have detected that a deadlock exists, you must decide how to
-improve the situation. Assume you have detected a deadlock while
-transaction *t* is waiting for a lock.  If you're feeling
-homicidal, you might abort **all** transactions that *t* is
+completed after a given period of time. For a real solution, you may implement
+cycle-detection in a dependency graph data structure as shown in lecture. In this
+scheme, you would  check for cycles in a dependency graph periodically or whenever
+you attempt to grant a new lock, and abort something if a cycle exists. After you have detected
+that a deadlock exists, you must decide how to improve the situation. Assume you
+have detected a deadlock while  transaction *t* is waiting for a lock.  If you're
+feeling  homicidal, you might abort **all** transactions that *t* is
 waiting for; this may result in a large amount of work being undone, but
 you can guarantee that *t* will make progress.
 Alternately, you may decide to abort *t* to give other
 transactions a chance to make progress. This means that the end-user will have
 to retry transaction *t*.
 
-Another approach is to implement locking such that deadlocks are preemptively 
-averted. This scheme (deadlock avoidance) is sometimes more practical as it 
-avoids waiting or building a graph, but can mistakenly abort transactions that
-could have succeeded. Examples include the well-known WAIT-DIE and WOUND-WAIT schemes.
+Another approach is to use global orderings of transactions to avoid building the 
+wait-for graph. This is sometimes preferred for performance reasons, but transactions
+that could have succeeded can be aborted by mistake under this scheme. Examples include
+the WAIT-DIE and WOUND-WAIT schemes.
 
 ***
 
 **Exercise 5.**
 
-Implement deadlock detection and resolution / avoidance in
-`src/simpledb/BufferPool.java`. Most likely, you will want to check
-for a deadlock whenever a transaction attempts to acquire a lock and finds another
-transaction is holding the lock (note that this by itself is not a deadlock, but may
-be symptomatic of one.)  You have many design
-decisions for your deadlock resolution/avoidance system, but it is not necessary to
-do something highly sophisticated. Please describe your choices in the lab writeup and list
-the pros and cons of your choice compared to the alternatives.
+Implement deadlock detection or prevention in `src/simpledb/BufferPool.java`. You have many
+design decisions for your deadlock handling system, but it is not necessary to
+do something highly sophisticated. We expect you to do better than a simple timeout on each
+transaction. A good starting point will be to implement cycle-detection in a wait-for graph
+before every lock request, and you will receive full credit for such an implementation.
+Please describe your choices in the lab writeup and list the pros and cons of your choice
+compared to the alternatives.
 
 You should ensure that your code aborts transactions properly when a
 deadlock occurs, by throwing a
@@ -363,8 +358,8 @@ timeout-based detection method. The tests will output
 `TransactionAbortedExceptions` corresponding to resolved
 deadlocks to the console.
 
-Your code should now should pass the `TransactionTest` system test (which may also run for quite
-a long time).
+Your code should now should pass the `TransactionTest` system test (which
+may also run for quite a long time depending on your implementation).
 
 At this point, you should have a recoverable database, in the
 sense that if the database system crashes (at a point other than
@@ -379,20 +374,20 @@ database server.
 
 ###  2.9. Design alternatives
 
-During the course of this lab, we have identified three substantial design
+During the course of this lab, we have identified some substantial design
 choices that you have to make:
 
 *  Locking granularity: page-level versus tuple-level
-*  Deadlock handling: detection vs. avoidance
-*  Deadlock resolution: aborting yourself versus aborting others
-
+*  Deadlock handling: detection vs. prevention, aborting yourself vs. others.
 
 ***
 
-**Bonus Exercise 6. (10% extra credit)**
+**Bonus Exercise 6. (20% extra credit)**
 
 For one or more of these choices, implement both alternatives and
-briefly compare their performance characteristics in your writeup.
+experimentally compare their performance charateristics. Include your
+benchmarking code and a brief evaluation (possibly with graphs)
+in your writeup.
 
 You have now completed this lab.
 Good work!
@@ -409,7 +404,7 @@ writeup describing your approach.  This writeup should:
 *  Describe any missing or incomplete elements of your code.
 *  Describe how long you spent on the lab, and whether there was anything
    you found particularly difficult or confusing.
-*  Description of any extra credit implementation you have done.
+*  Describe any extra credit implementation you have done.
 
 ###  3.1. Collaboration
 This lab should be manageable for a single person, but if you prefer
@@ -453,16 +448,26 @@ You can also post on the class page on Piazza if you feel you have run into a bu
 ###  3.4 Grading
 <p>50% of your grade will be based on whether or not your code passes the system test suite we will run over it. These tests will be a superset of the tests we have provided. Before handing in your code, you should make sure it produces no errors (passes all of the tests) from both  <tt>ant test</tt> and <tt>ant systemtest</tt>.
 
+**New:** 
 
-**Note that this is a higher percentage of manual grading compared to earlier labs.**
+* Given that this lab will require you to heavily modify your earlier code, regression testing passing is a prerequisite
+  for grading tests. This means that if your submission fails a test from earlier labs, you will get a 0 for the
+  autograder score until you fix them. If this is an issue for you, contact us to discuss options.
+  
+* Given that this lab deals with concurrency, we will rerun the autograder after the due date to discourage
+trying buggy code until lucky. It is your responsibility to ensure that your code **reliably** passes
+the tests.
+  
+* This lab has a higher percentage of manual grading at 50% compared to previous labs. Specifically, we will be
+very unhappy if your concurrency handling is bogus (e.g., inserting Thread.sleep(1000) until a race disappears).
 
 **Important:** before testing, gradescope will replace your <tt>build.xml</tt>, <tt>HeapFileEncoder.java</tt> and the
 entire contents of the <tt>test</tt> directory with our version of these files. This means you cannot change the format
 of <tt>.dat</tt> files!  You should also be careful changing our APIs. You should test that your code compiles the
 unmodified tests.
 
-You should get immediate feedback and error outputs for failed tests (if any) from gradescope after submission. The
-score given will be your grade for the autograded portion of the assignment. An additional 25% of your grade will be
+
+You should get immediate feedback and error outputs for failed tests (if any) from gradescope after submission. An additional 50% of your grade will be
 based on the quality of your writeup and our subjective evaluation of your code. This part will also be published on
 gradescope after we finish grading your assignment.
 

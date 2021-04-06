@@ -98,7 +98,6 @@ public class LockingTest extends TestUtil.CreateHeapFile {
     // if we don't have the lock after TIMEOUT, we assume blocking.
     Thread.sleep(TIMEOUT);
     assertEquals(expected, t.acquired());
-    assertNull(t.getError());
 
     // TODO(ghuo): yes, stop() is evil, but this is unit test cleanup
     t.stop();
@@ -186,11 +185,11 @@ public class LockingTest extends TestUtil.CreateHeapFile {
    */
   @Test public void acquireThenRelease() throws Exception {
     bp.getPage(tid1, p0, Permissions.READ_WRITE);
-    bp.releasePage(tid1, p0);
+    bp.unsafeReleasePage(tid1, p0);
     bp.getPage(tid2, p0, Permissions.READ_WRITE);
 
     bp.getPage(tid2, p1, Permissions.READ_WRITE);
-    bp.releasePage(tid2, p1);
+    bp.unsafeReleasePage(tid2, p1);
     bp.getPage(tid1, p1, Permissions.READ_WRITE);
   }
 
