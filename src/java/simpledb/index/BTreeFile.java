@@ -361,7 +361,7 @@ public class BTreeFile implements DbFile {
 	 * @param tid - the transaction id
 	 * @param dirtypages - the list of dirty pages which should be updated with all new dirty pages
 	 * @param page - the parent page
-	 * @see #updateParentPointer(TransactionId, HashMap, BTreePageId, BTreePageId)
+	 * @see #updateParentPointer(TransactionId, Map, BTreePageId, BTreePageId)
 	 * 
 	 * @throws DbException
 	 * @throws TransactionAbortedException

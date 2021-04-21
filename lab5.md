@@ -43,19 +43,19 @@ GitHub repository:
 
 ## 2. Search
 
-Take a look at `index/BTreeFile.java`. This is the core file for the implementation of
+Take a look at `index/` and `BTreeFile.java`. This is the core file for the implementation of
 the B+Tree and where you will write all your code for this lab. Unlike the
 HeapFile, the BTreeFile consists of four different kinds of pages. As you would
 expect, there are two different kinds of pages for the nodes of the tree:
 internal pages and leaf pages. Internal pages are implemented in
-`index/BTreeInternalPage.java`, and leaf pages are implemented in
-`index/BTreeLeafPage.java`. For convenience, we have created an abstract class in
-`index/BTreePage.java` which contains code that is common to both leaf and internal
-pages. In addition, header pages are implemented in `index/BTreeHeaderPage.java` and
+`BTreeInternalPage.java`, and leaf pages are implemented in
+`BTreeLeafPage.java`. For convenience, we have created an abstract class in
+`BTreePage.java` which contains code that is common to both leaf and internal
+pages. In addition, header pages are implemented in `BTreeHeaderPage.java` and
 keep track of which pages in the file are in use. Lastly, there is one page at
 the beginning of every BTreeFile which points to the root page of the tree and
 the first header page. This singleton page is implemented in
-`index/BTreeRootPtrPage.java`. Familiarize yourself with the interfaces of these
+`BTreeRootPtrPage.java`. Familiarize yourself with the interfaces of these
 classes, especially `BTreePage`, `BTreeInternalPage` and `BTreeLeafPage`. You
 will need to use these classes in your implementation of the B+Tree.
 
