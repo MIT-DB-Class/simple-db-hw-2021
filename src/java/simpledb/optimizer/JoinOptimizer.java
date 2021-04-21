@@ -73,7 +73,21 @@ public class JoinOptimizer {
 
         JoinPredicate p = new JoinPredicate(t1id, lj.p, t2id);
 
-        j = new Join(p,plan1,plan2);
+        if (lj.p == Predicate.Op.EQUALS) {
+
+            try {
+                // dynamically load HashEquiJoin -- if it doesn't exist, just
+                // fall back on regular join
+                Class<?> c = Class.forName("simpledb.execution.HashEquiJoin");
+                java.lang.reflect.Constructor<?> ct = c.getConstructors()[0];
+                j = (OpIterator) ct
+                        .newInstance(new Object[] { p, plan1, plan2 });
+            } catch (Exception e) {
+                j = new Join(p, plan1, plan2);
+            }
+        } else {
+            j = new Join(p, plan1, plan2);
+        }
 
         return j;
 
@@ -221,10 +235,6 @@ public class JoinOptimizer {
             Map<String, TableStats> stats,
             Map<String, Double> filterSelectivities, boolean explain)
             throws ParsingException {
-        //Not necessary for labs 1--3
-
-        // See the Lab 3 writeup for some hints as to how this function
-        // should work.
 
         // some code goes here
         //Replace the following
