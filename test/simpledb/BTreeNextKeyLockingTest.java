@@ -131,7 +131,7 @@ public class BTreeNextKeyLockingTest extends SimpleDbTestBase {
 		// now let the inserts happen
 		Database.getBufferPool().transactionComplete(tid);
 
-		while(!bw1.succeeded()) {
+		while(!bw1.succeeded() && bw1.getError() == null) {
 			Thread.sleep(POLL_INTERVAL);
 			if(bw1.succeeded()) {
 				Database.getBufferPool().transactionComplete(tid1);
@@ -233,7 +233,7 @@ public class BTreeNextKeyLockingTest extends SimpleDbTestBase {
 		// now let the inserts happen
 		Database.getBufferPool().transactionComplete(tid);
 
-		while(!bw1.succeeded()) {
+		while(!bw1.succeeded() && bw1.getError() == null) {
 			Thread.sleep(POLL_INTERVAL);
 			if(bw1.succeeded()) {
 				Database.getBufferPool().transactionComplete(tid1);
