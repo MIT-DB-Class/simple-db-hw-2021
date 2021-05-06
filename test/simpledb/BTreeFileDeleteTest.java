@@ -114,7 +114,7 @@ public class BTreeFileDeleteTest extends SimpleDbTestBase {
 		// create the parent page and the new entry
 		BTreePageId parentId = new BTreePageId(tableid, 3, BTreePageId.INTERNAL);
 		BTreeInternalPage parent = new BTreeInternalPage(parentId, BTreeInternalPage.createEmptyPageData(), keyField);
-		Field key = page.iterator().next().getField(keyField);
+		Field key = sibling.iterator().next().getField(keyField);
 		BTreeEntry entry = new BTreeEntry(key, pageId, siblingId);
 		parent.insertEntry(entry);
 		
