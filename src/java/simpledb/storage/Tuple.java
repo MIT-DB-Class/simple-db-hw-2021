@@ -13,6 +13,10 @@ public class Tuple implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    private TupleDesc td;
+    private RecordId rid;
+    private Field[] fields;
+
     /**
      * Create a new tuple with the specified schema (type).
      *
@@ -22,6 +26,9 @@ public class Tuple implements Serializable {
      */
     public Tuple(TupleDesc td) {
         // some code goes here
+        this.td = td;
+        this.rid = null;
+        this.fields = new Field[this.td.numFields()];
     }
 
     /**
@@ -29,7 +36,7 @@ public class Tuple implements Serializable {
      */
     public TupleDesc getTupleDesc() {
         // some code goes here
-        return null;
+        return td;
     }
 
     /**
@@ -38,7 +45,7 @@ public class Tuple implements Serializable {
      */
     public RecordId getRecordId() {
         // some code goes here
-        return null;
+        return rid;
     }
 
     /**
@@ -49,6 +56,7 @@ public class Tuple implements Serializable {
      */
     public void setRecordId(RecordId rid) {
         // some code goes here
+        this.rid = rid;
     }
 
     /**
@@ -61,6 +69,7 @@ public class Tuple implements Serializable {
      */
     public void setField(int i, Field f) {
         // some code goes here
+        fields[i] = f;
     }
 
     /**
@@ -71,7 +80,7 @@ public class Tuple implements Serializable {
      */
     public Field getField(int i) {
         // some code goes here
-        return null;
+        return fields[i];
     }
 
     /**
@@ -84,24 +93,43 @@ public class Tuple implements Serializable {
      */
     public String toString() {
         // some code goes here
-        throw new UnsupportedOperationException("Implement this");
+        String str = "";
+        Iterator<Field> iterator = fields();
+        while (iterator.hasNext()) {
+            str += iterator.toString();
+            if (iterator.hasNext()) {
+                str += "\t";
+            }
+        }
+        return str;
     }
 
     /**
      * @return
      *        An iterator which iterates over all the fields of this tuple
      * */
-    public Iterator<Field> fields()
-    {
+    public Iterator<Field> fields() {
         // some code goes here
-        return null;
+        return new Iterator<Field>() {
+            private int i;
+
+            @Override
+            public boolean hasNext() {
+                return i < fields.length;
+            }
+
+            @Override
+            public Field next() {
+                return fields[i++];
+            }
+        };
     }
 
     /**
      * reset the TupleDesc of this tuple (only affecting the TupleDesc)
      * */
-    public void resetTupleDesc(TupleDesc td)
-    {
+    public void resetTupleDesc(TupleDesc td) {
         // some code goes here
+        this.td = td;
     }
 }

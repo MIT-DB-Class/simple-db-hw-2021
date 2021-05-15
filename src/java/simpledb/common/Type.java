@@ -28,7 +28,8 @@ public enum Type implements Serializable {
             }
         }
 
-    }, STRING_TYPE() {
+    },
+    STRING_TYPE() {
         @Override
         public int getLen() {
             return STRING_LEN+4;

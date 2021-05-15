@@ -49,14 +49,14 @@ public class TupleTest extends SimpleDbTestBase {
         RecordId rid1 = new RecordId(pid1, 0);
         tup1.setRecordId(rid1);
 
-	try {
-	    assertEquals(rid1, tup1.getRecordId());
-	} catch (java.lang.UnsupportedOperationException e) {
-		//rethrow the exception with an explanation
-    	throw new UnsupportedOperationException("modifyRecordId() test failed due to " +
-    			"RecordId.equals() not being implemented.  This is not required for Lab 1, " +
-    			"but should pass when you do implement the RecordId class.");
-	}
+        try {
+            assertEquals(rid1, tup1.getRecordId());
+        } catch (java.lang.UnsupportedOperationException e) {
+            //rethrow the exception with an explanation
+            throw new UnsupportedOperationException("modifyRecordId() test failed due to " +
+                    "RecordId.equals() not being implemented.  This is not required for Lab 1, " +
+                    "but should pass when you do implement the RecordId class.");
+        }
     }
 
     /**
