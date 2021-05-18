@@ -96,7 +96,7 @@ public class Tuple implements Serializable {
         String str = "";
         Iterator<Field> iterator = fields();
         while (iterator.hasNext()) {
-            str += iterator.toString();
+            str += iterator.next();
             if (iterator.hasNext()) {
                 str += "\t";
             }
@@ -111,7 +111,7 @@ public class Tuple implements Serializable {
     public Iterator<Field> fields() {
         // some code goes here
         return new Iterator<Field>() {
-            private int i;
+            private int i = 0;
 
             @Override
             public boolean hasNext() {
