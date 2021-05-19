@@ -254,7 +254,7 @@ public class TupleDesc implements Serializable {
         String str = "";
         Iterator<TDItem> iterator = iterator();
         while (iterator.hasNext()) {
-            str += iterator.toString();
+            str += iterator.next();
             if (iterator.hasNext()) {
                 str += ",";
             }

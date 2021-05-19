@@ -46,8 +46,7 @@ public abstract class Operator implements OpIterator {
      * @return the next Tuple in the iterator, or null if the iteration is
      *         finished.
      */
-    protected abstract Tuple fetchNext() throws DbException,
-            TransactionAbortedException;
+    protected abstract Tuple fetchNext() throws DbException, TransactionAbortedException;
 
     /**
      * Closes this iterator. If overridden by a subclass, they should call
