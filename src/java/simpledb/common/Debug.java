@@ -6,8 +6,8 @@ package simpledb.common;
  * more or less command line output to be turned on.
  * <p>
  * Change the value of the DEBUG_LEVEL constant using a system property:
- * simpledb.common.Debug. For example, on the command line, use -Dsimpledb.Debug=x,
- * or simply -Dsimpledb.Debug to enable it at level 0.
+ * simpledb.common.Debug. For example, on the command line, use -Dsimpledb.common.Debug=x,
+ * or simply -Dsimpledb.common.Debug to enable it at level 0.
  * The log(level, message, ...) method will print to standard output if the
  * level number is less than or equal to the currently set DEBUG_LEVEL.
  */
