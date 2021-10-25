@@ -240,18 +240,18 @@
     </target>
 
     <target name="runtest" depends="testcompile"
-            description="Runs the test you specify on the command line with -Dtest=">
+            description="Runs the test you specify on the command line with -Dtest=TupleTest">
         <!-- Check for -Dtest command line argument -->
-        <fail unless="test" message="You must run this target with -Dtest=TestName"/>
+        <fail unless="test" message="You must run this target with -Dtest=TupleTest"/>
 
         <!-- Check if the class exists -->
-        <available property="test.exists" classname="simpledb.${test}">
+        <available property="test.exists" classname="simpledb.TupleTest">
                 <classpath refid="classpath.test" />
         </available>
-        <fail unless="test.exists" message="Test ${test} could not be found"/>
+        <fail unless="test.exists" message="Test simpledb.TupleTest could not be found"/>
 
         <RunJunit>
-            <test name="simpledb.${test}"/>
+            <test name="simpledb.TupleTest"/>
         </RunJunit>
     </target>
 
