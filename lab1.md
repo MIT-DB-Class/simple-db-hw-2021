@@ -301,13 +301,10 @@ more sense for you.
 
 ****
 
-* Implement the classes to manage tuples, namely Tuple, TupleDesc. We have already implemented Field, IntField,
-  StringField, and Type for you. Since you only need to support integer and (fixed length) string fields and fixed
-  length tuples, these are straightforward.
+* Implement the classes to manage tuples, namely Tuple, TupleDesc. We have already implemented Field, IntField,StringField, and Type for you. Since you only need to support integer and (fixed length) string fields and fixedlength tuples, these are straightforward.
 * Implement the Catalog (this should be very simple).
 * Implement the BufferPool constructor and the getPage() method.
-* Implement the access methods, HeapPage and HeapFile and associated ID classes. A good portion of these files has
-  already been written for you.
+* Implement the access methods, HeapPage and HeapFile and associated ID classes. A good portion of these files has already been written for you.
 * Implement the operator SeqScan.
 * At this point, you should be able to pass the ScanTest system test, which is the goal for this lab.
 
@@ -330,18 +327,15 @@ SimpleDB consists of:
 
 * Classes that represent fields, tuples, and tuple schemas;
 * Classes that apply predicates and conditions to tuples;
-* One or more access methods (e.g., heap files) that store relations on disk and provide a way to iterate through tuples
-  of those relations;
+* One or more access methods (e.g., heap files) that store relations on disk and provide a way to iterate through tuples of those relations;
 * A collection of operator classes (e.g., select, join, insert, delete, etc.) that process tuples;
-* A buffer pool that caches active tuples and pages in memory and handles concurrency control and transactions (neither
-  of which you need to worry about for this lab); and,
+* A buffer pool that caches active tuples and pages in memory and handles concurrency control and transactions (neither of which you need to worry about for this lab); and,
 * A catalog that stores information about available tables and their schemas.
 
 SimpleDB does not include many things that you may think of as being a part of a "database."  In particular, SimpleDB
 does not have:
 
-* (In this lab), a SQL front end or parser that allows you to type queries directly into SimpleDB. Instead, queries are
-  built up by chaining a set of operators together into a hand-built query plan (see [Section 2.7](#query_walkthrough)).
+* (In this lab), a SQL front end or parser that allows you to type queries directly into SimpleDB. Instead, queries are built up by chaining a set of operators together into a hand-built query plan (see [Section 2.7](#query_walkthrough)).
   We will provide a simple parser for use in later labs.
 * Views.
 * Data types except integers and fixed length strings.
@@ -402,7 +396,7 @@ using `Database.getBufferPool()`).
 
 * src/java/simpledb/common/Catalog.java
 
-*** 
+***
 
 At this point, your code should pass the unit tests in CatalogTest.
 
@@ -542,7 +536,7 @@ disk.
 
 * src/java/simpledb/storage/HeapFile.java
 
-*** 
+***
 
 To read a page from disk, you will first need to calculate the correct offset in the file. Hint: you will need random
 access to the file in order to read and write pages at arbitrary offsets. You should not call BufferPool methods when
