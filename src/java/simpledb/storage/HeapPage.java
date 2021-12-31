@@ -73,7 +73,8 @@ public class HeapPage implements Page {
     */
     private int getNumTuples() {        
         // some code goes here
-        return 0;
+
+        return (int) Math.floor((BufferPool.getPageSize() * 8) / (td.getSize() * 8 + 1));
 
     }
 
@@ -84,7 +85,7 @@ public class HeapPage implements Page {
     private int getHeaderSize() {        
         
         // some code goes here
-        return 0;
+        return (int) Math.ceil(numSlots / 8);
                  
     }
     
@@ -118,7 +119,7 @@ public class HeapPage implements Page {
      */
     public HeapPageId getId() {
     // some code goes here
-    throw new UnsupportedOperationException("implement this");
+        return pid;
     }
 
     /**
@@ -288,7 +289,13 @@ public class HeapPage implements Page {
      */
     public int getNumEmptySlots() {
         // some code goes here
-        return 0;
+        int count = 0;
+        for(int i = 0; i < numSlots; i++){
+            if(!isSlotUsed(i)){
+                count ++;
+            }
+        }
+        return count;
     }
 
     /**
@@ -296,7 +303,7 @@ public class HeapPage implements Page {
      */
     public boolean isSlotUsed(int i) {
         // some code goes here
-        return false;
+        return (header[i / 8] & (1 << (i % 8))) > 0;
     }
 
     /**
@@ -306,6 +313,35 @@ public class HeapPage implements Page {
         // some code goes here
         // not necessary for lab1
     }
+    class HeapPageIterator implements Iterator{
+
+        private ArrayList<Tuple> usedTuples;
+        private Iterator<Tuple> it;
+        public HeapPageIterator(){
+            usedTuples = new ArrayList<>();
+            for(int i = 0; i < numSlots; i++){
+                if(isSlotUsed(i)){
+                    usedTuples.add(tuples[i]);
+                }
+            }
+            it = usedTuples.iterator();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return it.hasNext();
+        }
+
+        @Override
+        public Object next() {
+            return it.next();
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("heapPage it 不允许 remove ***** from HeapPage.itetator()");
+        }
+    }
 
     /**
      * @return an iterator over all tuples on this page (calling remove on this iterator throws an UnsupportedOperationException)
@@ -313,7 +349,7 @@ public class HeapPage implements Page {
      */
     public Iterator<Tuple> iterator() {
         // some code goes here
-        return null;
+        return new HeapPageIterator();
     }
 
 }
