@@ -420,7 +420,6 @@ BufferPool instance for the entire SimpleDB process.
 We have not provided unit tests for BufferPool. The functionality you implemented will be tested in the implementation
 of HeapFile below. You should use the `DbFile.readPage` method to access pages of a DbFile.
 
-
 <!--
 When more than this many pages are in the buffer pool, one page should be
 evicted from the pool before the next is loaded.  The choice of eviction
