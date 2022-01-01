@@ -85,7 +85,7 @@ public class HeapPage implements Page {
     private int getHeaderSize() {        
         
         // some code goes here
-        return (int) Math.ceil(numSlots / 8);
+        return (int) Math.ceil(numSlots / 8.00);
                  
     }
     
@@ -303,7 +303,10 @@ public class HeapPage implements Page {
      */
     public boolean isSlotUsed(int i) {
         // some code goes here
-        return (header[i / 8] & (1 << (i % 8))) > 0;
+        if(i >= 0 && i < numSlots){
+            return (header[i / 8] & (1 << (i % 8))) > 0;
+        }
+        return false;
     }
 
     /**

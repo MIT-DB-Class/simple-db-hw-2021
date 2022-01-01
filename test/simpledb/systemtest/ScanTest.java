@@ -47,6 +47,7 @@ public class ScanTest extends SimpleDbTestBase {
         int[] rowSizes =
                 new int[]{0, 1, 2, 511, 512, 513, 1023, 1024, 1025, 4096 + r.nextInt(4096)};
         validateScan(columnSizes, rowSizes);
+        System.out.println();
     }
 
     /** Test that rewinding a SeqScan iterator works. */
