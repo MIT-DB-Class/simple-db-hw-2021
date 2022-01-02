@@ -525,7 +525,7 @@ layout of pages.
 You will also need to implement an Iterator over the tuples in the page, which may involve an auxiliary class or data
 structure.
 
-At this point, your code should pass the unit tests in HeapPageIdTest, RecordIDTest, and HeapPageReadTest.
+At this point, your code should pass the unit tests in HeapPageIdTest, RecordIdTest, and HeapPageReadTest.
 
 
 <p> 
