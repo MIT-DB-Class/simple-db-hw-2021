@@ -437,6 +437,7 @@ public class LogFile {
 
         raf.close();
         logFile.delete();
+        logNew.close();
         newFile.renameTo(logFile);
         raf = new RandomAccessFile(logFile, "rw");
         raf.seek(raf.length());
@@ -571,4 +572,11 @@ public class LogFile {
         raf.getChannel().force(true);
     }
 
+    public void close() {
+        try {
+            raf.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
