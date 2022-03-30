@@ -72,6 +72,9 @@ public class Database {
 
     // reset the database, used for unit tests only.
     public static void reset() {
+        if (_instance != null) {
+            _instance.get()._logfile.close();
+        }
         _instance.set(new Database());
     }
 
