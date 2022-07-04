@@ -337,7 +337,7 @@ SimpleDB consists of:
   of which you need to worry about for this lab); and,
 * A catalog that stores information about available tables and their schemas.
 
-SimpleDB does not include many things that you may think of as being a part of a "database."  In particular, SimpleDB
+SimpleDB does not include many things that you may think of as being a part of a "database". In particular, SimpleDB
 does not have:
 
 * (In this lab), a SQL front end or parser that allows you to type queries directly into SimpleDB. Instead, queries are
