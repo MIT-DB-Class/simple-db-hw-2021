@@ -176,7 +176,7 @@ correct permissions object (e.g., `Permissions.READ_WRITE`
 or `Permissions.READ_ONLY`). You may also wish to double
 check that your implementation of
 `BufferPool.insertTuple()` and
-`BufferPool.deleteTupe()` call `markDirty()` on
+`BufferPool.deleteTuple()` call `markDirty()` on
 any of the pages they access (you should have done this when you
 implemented this code in lab 2, but we did not test for this case.)
 
