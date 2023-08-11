@@ -23,12 +23,25 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Catalog {
 
+    public HashMap<String, String> namePkeyMap;
+    public HashMap<String, Integer> nameIdMap;
+    public HashMap<Integer, TupleDesc> fidTupleDesc;
+    public HashMap<Integer, DbFile> fidDbFileMap;
+    public HashMap<Integer, String> fidNameMap;
+
     /**
      * Constructor.
      * Creates a new, empty catalog.
      */
     public Catalog() {
         // some code goes here
+        namePkeyMap = new HashMap<>();
+        nameIdMap = new HashMap<>();
+        fidTupleDesc = new HashMap<>();
+        fidDbFileMap = new HashMap<>();
+        fidNameMap = new HashMap<>();
+
+
     }
 
     /**
@@ -42,6 +55,13 @@ public class Catalog {
      */
     public void addTable(DbFile file, String name, String pkeyField) {
         // some code goes here
+        Integer fid = file.getId();
+        TupleDesc tupleDesc = file.getTupleDesc();
+        namePkeyMap.put(name, pkeyField);
+        nameIdMap.put(name, fid);
+        fidTupleDesc.put(fid, tupleDesc);
+        fidDbFileMap.put(fid, file);
+        fidNameMap.put(fid, name);
     }
 
     public void addTable(DbFile file, String name) {
@@ -65,7 +85,11 @@ public class Catalog {
      */
     public int getTableId(String name) throws NoSuchElementException {
         // some code goes here
-        return 0;
+        try{
+            return nameIdMap.get(name);
+        }catch (Exception e){
+            throw new NoSuchElementException();
+        }
     }
 
     /**
@@ -76,7 +100,11 @@ public class Catalog {
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
         // some code goes here
-        return null;
+        try{
+            return fidTupleDesc.get(tableid);
+        }catch (Exception e){
+            throw new NoSuchElementException();
+        }
     }
 
     /**
@@ -87,7 +115,11 @@ public class Catalog {
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
         // some code goes here
-        return null;
+        try{
+            return fidDbFileMap.get(tableid);
+        }catch (Exception e){
+            throw new NoSuchElementException();
+        }
     }
 
     public String getPrimaryKey(int tableid) {
@@ -102,7 +134,7 @@ public class Catalog {
 
     public String getTableName(int id) {
         // some code goes here
-        return null;
+        return fidNameMap.get(id);
     }
     
     /** Delete all tables from the catalog */
