@@ -73,8 +73,9 @@ public class HeapPage implements Page {
     */
     private int getNumTuples() {        
         // some code goes here
-        return 0;
-
+        int pageSize = BufferPool.getPageSize();
+        int res = ((int) Math.floor((pageSize * 8 * 1.0) / (td.getSize() * 8 + 1)));
+        return res;
     }
 
     /**
@@ -84,7 +85,7 @@ public class HeapPage implements Page {
     private int getHeaderSize() {        
         
         // some code goes here
-        return 0;
+        return (int) Math.ceil(getNumTuples() * 1.0 / 8);
                  
     }
     
@@ -118,7 +119,7 @@ public class HeapPage implements Page {
      */
     public HeapPageId getId() {
     // some code goes here
-    throw new UnsupportedOperationException("implement this");
+        return pid;
     }
 
     /**
@@ -288,7 +289,13 @@ public class HeapPage implements Page {
      */
     public int getNumEmptySlots() {
         // some code goes here
-        return 0;
+        int res = 0;
+        for(int i = 0; i < getNumTuples() ; i ++ ){
+            if(!isSlotUsed(i)){
+                res++;
+            }
+        }
+        return res;
     }
 
     /**
@@ -296,7 +303,13 @@ public class HeapPage implements Page {
      */
     public boolean isSlotUsed(int i) {
         // some code goes here
-        return false;
+        // 找到i所处header字节数组的位置
+        int byteIndex = i / 8;
+        // i处于字节的第几位
+        int bitIndex = i % 8;
+        // 判断该位是否为1
+        int flag = (header[byteIndex] >> bitIndex) & 1;
+        return flag == 1;
     }
 
     /**
@@ -313,7 +326,13 @@ public class HeapPage implements Page {
      */
     public Iterator<Tuple> iterator() {
         // some code goes here
-        return null;
+        List<Tuple> res = new ArrayList<>();
+        for(int i = 0; i < numSlots ; i ++ ){
+            if(isSlotUsed(i)){
+                res.add(tuples[i]);
+            }
+        }
+        return res.iterator();
     }
 
 }
