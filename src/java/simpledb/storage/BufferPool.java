@@ -10,6 +10,7 @@ import simpledb.transaction.TransactionId;
 import java.io.*;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -34,7 +35,9 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
 
-    public HashMap<PageId, Page> pageCache;
+    private Map<PageId, Page> pageCache;
+
+    private Integer numPages;
 
     /**
      * Creates a BufferPool that caches up to numPages pages.
@@ -43,7 +46,8 @@ public class BufferPool {
      */
     public BufferPool(int numPages) {
         // some code goes here
-        pageCache = new HashMap<>();
+        this.numPages = numPages;
+        pageCache = new ConcurrentHashMap<>();
     }
     
     public static int getPageSize() {
