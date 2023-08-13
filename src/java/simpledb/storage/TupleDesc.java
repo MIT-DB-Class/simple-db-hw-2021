@@ -10,7 +10,12 @@ import java.util.*;
  * TupleDesc describes the schema of a tuple.
  */
 public class TupleDesc implements Serializable {
-    public ArrayList<TDItem> tdItems = new ArrayList<>();
+    public List<TDItem> tdItems = new ArrayList<>();
+
+    public void setTdItems(List<TDItem> tdItems) {
+        this.tdItems = tdItems;
+    }
+
     /**
      * A help class to facilitate organizing the information of each field
      * */
@@ -83,6 +88,10 @@ public class TupleDesc implements Serializable {
             TDItem item = new TDItem(typeAr[i], null);
             tdItems.add(item);
         }
+    }
+
+    public TupleDesc(){
+        tdItems = new ArrayList<>();
     }
 
     /**
