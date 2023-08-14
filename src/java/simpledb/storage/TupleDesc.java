@@ -10,7 +10,12 @@ import java.util.*;
  * TupleDesc describes the schema of a tuple.
  */
 public class TupleDesc implements Serializable {
-    public ArrayList<TDItem> tdItems = new ArrayList<>();
+    public List<TDItem> tdItems = new ArrayList<>();
+
+    public void setTdItems(List<TDItem> tdItems) {
+        this.tdItems = tdItems;
+    }
+
     /**
      * A help class to facilitate organizing the information of each field
      * */
@@ -85,6 +90,10 @@ public class TupleDesc implements Serializable {
         }
     }
 
+    public TupleDesc(){
+        tdItems = new ArrayList<>();
+    }
+
     /**
      * @return the number of fields in this TupleDesc
      */
@@ -139,11 +148,15 @@ public class TupleDesc implements Serializable {
      */
     public int fieldNameToIndex(String name) throws NoSuchElementException {
         // some code goes here
+        if(name == null){
+            throw new NoSuchElementException("null is not a valid field name");
+        }
         int res = 0;
         boolean flag = false;
         for(int i=0;i<tdItems.size();i++){
-            if(tdItems.get(i).fieldName == name){
-                res = 0;
+            TDItem item = tdItems.get(i);
+            if(item.fieldName != null && item.fieldName.equals(name)){
+                res = i;
                 flag = true;
                 break;
             }
