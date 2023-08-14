@@ -9,12 +9,16 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import junit.framework.JUnit4TestAdapter;
 
-public class PredicateTest extends SimpleDbTestBase{
+public class PredicateTest extends SimpleDbTestBase {
 
   /**
    * Unit test for Predicate.filter()
    */
-  @Test public void filter() {
+
+  // p.filter(t)
+  // t.value op p.value
+  @Test
+  public void filter() {
     int[] vals = new int[] { -1, 0, 1 };
 
     for (int i : vals) {
@@ -64,4 +68,3 @@ public class PredicateTest extends SimpleDbTestBase{
     return new JUnit4TestAdapter(PredicateTest.class);
   }
 }
-

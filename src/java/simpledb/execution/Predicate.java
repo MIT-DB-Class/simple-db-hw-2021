@@ -4,7 +4,6 @@ import simpledb.storage.Field;
 import simpledb.storage.Tuple;
 
 import java.io.Serializable;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Predicate compares tuples to a specified Field value.
@@ -20,9 +19,9 @@ public class Predicate implements Serializable {
         /**
          * Interface to access operations by integer value for command-line
          * convenience.
-         *
+         * 
          * @param i
-         *            a valid integer Op index
+         *          a valid integer Op index
          */
         public static Op getOp(int i) {
             return values()[i];
@@ -48,51 +47,48 @@ public class Predicate implements Serializable {
 
     }
 
+    public Op op;
+    public Field ope;
+    public int field;
 
-    Op oop;
-    Field opd;
-    int fd;
     /**
      * Constructor.
-     *
+     * 
      * @param field
-     *            field number of passed in tuples to compare against.
+     *                field number of passed in tuples to compare against.
      * @param op
-     *            operation to use for comparison
+     *                operation to use for comparison
      * @param operand
-     *            field value to compare passed in tuples to
+     *                field value to compare passed in tuples to
      */
     public Predicate(int field, Op op, Field operand) {
-        this.fd = field;
-        this.oop = op;
-        this.opd = operand;
+        this.field = field;
+        this.op = op;
+        this.ope = operand;
     }
 
     /**
      * @return the field number
      */
-    public int getField()
-    {
+    public int getField() {
         // some code goes here
-        return this.fd;
+        return field;
     }
 
     /**
      * @return the operator
      */
-    public Op getOp()
-    {
+    public Op getOp() {
         // some code goes here
-        return this.oop;
+        return op;
     }
 
     /**
      * @return the operand
      */
-    public Field getOperand()
-    {
+    public Field getOperand() {
         // some code goes here
-        return this.opd;
+        return ope;
     }
 
     /**
@@ -100,14 +96,14 @@ public class Predicate implements Serializable {
      * operand field specified in the constructor using the operator specific in
      * the constructor. The comparison can be made through Field's compare
      * method.
-     *
+     * 
      * @param t
-     *            The tuple to compare against
+     *          The tuple to compare against
      * @return true if the comparison is true, false otherwise.
      */
     public boolean filter(Tuple t) {
         // some code goes here
-        return t.getField(this.fd).compare(oop,opd);
+        return t.getField(field).compare(op, ope);
     }
 
     /**
@@ -116,6 +112,6 @@ public class Predicate implements Serializable {
      */
     public String toString() {
         // some code goes here
-        return oop.toString();
+        return "";
     }
 }
