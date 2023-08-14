@@ -100,18 +100,18 @@ public class Tuple implements Serializable {
      * where \t is any whitespace (except a newline)
      */
     public String toString() {
-//        StringBuilder stringBuilder = new StringBuilder();
-//        Iterator<TupleDesc.TDItem> tdItems = this.tupleDesc.iterator();
-//        int i = 0;
-//        while (tdItems.hasNext()) {
-//            TupleDesc.TDItem item = tdItems.next();
-//            stringBuilder.append("FiledName: ").append(item.fieldName);
-//            stringBuilder.append("==> Value: ").append(fields.get(i).toString());
-//            stringBuilder.append("\n");
-//            i++;
-//        }
-//        return stringBuilder.toString();
-        return "TEST";
+        StringBuilder stringBuilder = new StringBuilder();
+        Iterator<TupleDesc.TDItem> tdItems = this.tupleDesc.iterator();
+        int i = 0;
+        while (tdItems.hasNext()) {
+            TupleDesc.TDItem item = tdItems.next();
+            stringBuilder.append("FiledName: ").append(item.fieldName);
+            stringBuilder.append("==> Value: ").append(fields.get(i).toString());
+            stringBuilder.append("\n");
+            i++;
+        }
+        return stringBuilder.toString();
+        //        return "TEST";
     }
 
     /**
