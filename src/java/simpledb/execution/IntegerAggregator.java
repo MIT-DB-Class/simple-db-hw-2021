@@ -1,7 +1,16 @@
 package simpledb.execution;
 
+import simpledb.common.DbException;
 import simpledb.common.Type;
+import simpledb.storage.IntField;
 import simpledb.storage.Tuple;
+import simpledb.storage.Field;
+import simpledb.storage.TupleDesc;
+import simpledb.transaction.TransactionAbortedException;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * Knows how to compute some aggregate over a set of IntFields.
@@ -9,7 +18,12 @@ import simpledb.storage.Tuple;
 public class IntegerAggregator implements Aggregator {
 
     private static final long serialVersionUID = 1L;
-
+    private final int gbfield;
+    private final int afield;
+    private final Type gbfieldType;
+    private final Op op;
+    private HashMap<Field, Integer> aggregatedValueMap;
+    private HashMap<Field, Integer> groupbyCounter;
     /**
      * Aggregate constructor
      * 
@@ -27,6 +41,14 @@ public class IntegerAggregator implements Aggregator {
 
     public IntegerAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
         // some code goes here
+        this.gbfieldType = gbfieldtype;
+        this.gbfield = gbfield;
+        this.afield = afield;
+        this.op = what;
+        aggregatedValueMap = new HashMap<>();
+        if(gbfield != Aggregator.NO_GROUPING){
+            groupbyCounter = new HashMap<>();
+        }
     }
 
     /**
@@ -37,7 +59,27 @@ public class IntegerAggregator implements Aggregator {
      *            the Tuple containing an aggregate field and a group-by field
      */
     public void mergeTupleIntoGroup(Tuple tup) {
-        // some code goes here
+        Field gbField = (gbfield == Aggregator.NO_GROUPING) ? null : tup.getField(gbfield);
+        Integer newValue = ((IntField) tup.getField(afield)).getValue();
+        switch (op){
+            case MIN:
+                aggregatedValueMap.merge(gbField, newValue, Math::min);
+                break;
+            case MAX:
+                aggregatedValueMap.merge(gbField, newValue, (oldMax, val) -> Math.max(oldMax, val));
+                break;
+            case SUM:
+                aggregatedValueMap.merge(gbField, newValue, Integer::sum);
+                break;
+            case COUNT:
+                aggregatedValueMap.merge(gbField, 1, Integer::sum);
+                break;
+            case AVG:
+                aggregatedValueMap.merge(gbField, newValue, Integer::sum);
+                groupbyCounter.merge(gbField, 1, Integer::sum);
+                break;
+
+        }
     }
 
     /**
@@ -50,8 +92,67 @@ public class IntegerAggregator implements Aggregator {
      */
     public OpIterator iterator() {
         // some code goes here
-        throw new
-        UnsupportedOperationException("please implement me for lab2");
+        return new OpIterator() {
+            private int curIdx = 0;
+            private boolean isOpen = false;
+            private TupleDesc td;
+            private Tuple[] tuples;
+            @Override
+            public void open() throws DbException, TransactionAbortedException {
+                tuples = new Tuple[aggregatedValueMap.size()];
+                isOpen = true;
+                if(gbfield == Aggregator.NO_GROUPING){
+                    td = new TupleDesc(new Type[] {Type.INT_TYPE});
+                    tuples[0] = new Tuple(td);
+                    IntField value = new IntField((op == Op.AVG) ? aggregatedValueMap.get(null) / groupbyCounter.get(null) : aggregatedValueMap.get(null));
+                    tuples[0].setField(0, value);
+                }else{
+                    td = new TupleDesc(new Type[] {gbfieldType, Type.INT_TYPE});
+                    int i = 0;
+                    for(Map.Entry<Field, Integer> entrySet: aggregatedValueMap.entrySet()){
+                        tuples[i] = new Tuple(td);
+                        IntField value = new IntField((op == Op.AVG) ? entrySet.getValue() / groupbyCounter.get(entrySet.getKey()) : entrySet.getValue());
+                        tuples[i].setField(0, entrySet.getKey());
+                        tuples[i].setField(1, value);
+                        i++;
+                    }
+                }
+            }
+
+            @Override
+            public boolean hasNext() throws DbException, TransactionAbortedException {
+                if(isOpen)
+                    return curIdx < aggregatedValueMap.size();
+                throw new DbException("Operator not open yet");
+            }
+
+            @Override
+            public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
+                if(curIdx >= tuples.length){
+                    throw new NoSuchElementException("Index beyond the size of map");
+                }else{
+                    return tuples[curIdx++];
+                }
+            }
+
+            @Override
+            public void rewind() throws DbException, TransactionAbortedException {
+                if(isOpen)
+                    curIdx = 0;
+                else
+                    throw new DbException("Operator not open yet");
+            }
+
+            @Override
+            public TupleDesc getTupleDesc() {
+                return td;
+            }
+
+            @Override
+            public void close() {
+                isOpen = false;
+            }
+        };
     }
 
 }
