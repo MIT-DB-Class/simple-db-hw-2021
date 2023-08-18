@@ -9,6 +9,8 @@ import simpledb.transaction.TransactionId;
 
 import java.io.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -150,8 +152,20 @@ public class BufferPool {
      */
     public void insertTuple(TransactionId tid, int tableId, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
-        // some code goes here
-        // not necessary for lab1
+        DbFile f = Database.getCatalog().getDatabaseFile(tableId);
+        List<Page> modifiedPages = f.insertTuple(tid, t);
+
+        for(Page p: modifiedPages){
+            p.markDirty(true, tid);
+            PageId pid = p.getId();
+            if(pageCache.replace(pid, p) == null){
+                if(pageCache.size() >= numPages){
+                    evictPage(p);
+                }
+                pageCache.put(pid, p);
+            }
+        }
+
     }
 
     /**
@@ -169,8 +183,19 @@ public class BufferPool {
      */
     public  void deleteTuple(TransactionId tid, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
-        // some code goes here
-        // not necessary for lab1
+        DbFile f = Database.getCatalog().getDatabaseFile(t.getRecordId().getPageId().getTableId());
+        List<Page> modifiedPages = f.deleteTuple(tid, t);
+
+        for(Page p: modifiedPages){
+            p.markDirty(true, tid);
+            PageId pid = p.getId();
+            if(pageCache.replace(pid, p) == null){
+                if(pageCache.size() >= numPages){
+                    evictPage(p);
+                }
+                pageCache.put(pid, p);
+            }
+        }
     }
 
     /**
@@ -202,8 +227,10 @@ public class BufferPool {
      * @param pid an ID indicating the page to flush
      */
     private synchronized  void flushPage(PageId pid) throws IOException {
-        // some code goes here
-        // not necessary for lab1
+        Page p = pageCache.get(pid);
+        Database.getCatalog().getDatabaseFile(pid.getTableId()).writePage(p);
+        p.markDirty(false, null);
+        pageCache.remove(pid);
     }
 
     /** Write all pages of the specified transaction to disk.
@@ -217,9 +244,18 @@ public class BufferPool {
      * Discards a page from the buffer pool.
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
-    private synchronized  void evictPage() throws DbException {
-        // some code goes here
-        // not necessary for lab1
+    private synchronized  void evictPage(Page p) throws DbException {
+        PageId pid = p.getId();
+        if(pageCache.containsKey(pid)){
+            if(p.isDirty() == null){
+                try{
+                    flushPage(pid);
+                } catch (IOException ioe){
+                    ioe.printStackTrace();
+                }
+
+            }
+        }
     }
 
 }
