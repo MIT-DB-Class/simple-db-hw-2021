@@ -38,7 +38,9 @@ public class EvictionTest extends SimpleDbTestBase {
         SeqScan scan = new SeqScan(tid, f.getId(), "");
         scan.open();
         while (scan.hasNext()) {
-            scan.next();
+            Tuple cur = scan.next();
+            System.out.println(Database.getBufferPool().pageCache.size());
+
         }
         System.out.println("EvictionTest scan complete, testing memory usage of scan");
         long endMem = SystemTestUtil.getMemoryFootprint();
