@@ -6,6 +6,12 @@ import simpledb.execution.Predicate;
  */
 public class IntHistogram {
 
+    public BinaryIndexedTree bit;
+
+    public int min;
+    public int max;
+    public int numOfTuples;
+
     /**
      * Create a new IntHistogram.
      * 
@@ -22,8 +28,14 @@ public class IntHistogram {
      * @param min The minimum integer value that will ever be passed to this class for histogramming
      * @param max The maximum integer value that will ever be passed to this class for histogramming
      */
+
     public IntHistogram(int buckets, int min, int max) {
     	// some code goes here
+        int n = max - min;
+        bit = new BinaryIndexedTree(n);
+        this.min = min;
+        this.max = max;
+        this.numOfTuples = 0;
     }
 
     /**
@@ -31,7 +43,8 @@ public class IntHistogram {
      * @param v Value to add to the histogram
      */
     public void addValue(int v) {
-    	// some code goes here
+        bit.add(v - min + 1, 1);
+        this.numOfTuples++;
     }
 
     /**
@@ -47,7 +60,25 @@ public class IntHistogram {
     public double estimateSelectivity(Predicate.Op op, int v) {
 
     	// some code goes here
-        return -1.0;
+        double res = -1.0;
+        switch (op){
+            case EQUALS:
+                return (double) (bit.query(v - min + 1) - bit.query(v - min)) / numOfTuples;
+            case GREATER_THAN:
+                return (double) (numOfTuples - bit.query(v - min + 1)) / numOfTuples;
+            case GREATER_THAN_OR_EQ:
+                return (double) (numOfTuples - bit.query(v - min )) / numOfTuples;
+            case LESS_THAN:
+                res = (double) (bit.query(v - min )) / numOfTuples;
+                return res;
+            case LESS_THAN_OR_EQ:
+                return (double) (bit.query(v - min + 1)) / numOfTuples;
+            case NOT_EQUALS:
+                return (double) (numOfTuples - bit.query(v - min + 1) + bit.query(v - min)) / numOfTuples;
+        }
+
+
+        return res;
     }
     
     /**
