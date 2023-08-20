@@ -130,7 +130,9 @@ public class JoinOptimizer {
             // HINT: You may need to use the variable "j" if you implemented
             // a join algorithm that's more complicated than a basic
             // nested-loops join.
-            return -1.0;
+            final double IoCost = cost1 + card1 * cost2;
+            final double CpuCost = card1 * card2;
+            return IoCost + CpuCost;
         }
     }
 
@@ -175,7 +177,23 @@ public class JoinOptimizer {
                                                    boolean t2pkey, Map<String, TableStats> stats,
                                                    Map<String, Integer> tableAliasToId) {
         int card = 1;
-        // some code goes here
+        if(t1pkey && t2pkey){
+            card = Math.min(card1, card2);
+        }else if(!t1pkey && !t2pkey){
+            card = Math.max(card2, card1);
+        }else{
+            card = t1pkey ? card2 : card1;
+        }
+
+        switch (joinOp){
+            case EQUALS:
+                break;
+            case NOT_EQUALS:
+                card = card1 * card2 - card;
+                break;
+            default:
+                card = card1 * card2 / 3;
+        }
         return card <= 0 ? 1 : card;
     }
 
@@ -236,11 +254,59 @@ public class JoinOptimizer {
             Map<String, Double> filterSelectivities, boolean explain)
             throws ParsingException {
 
-        // some code goes here
-        //Replace the following
-        return joins;
+        PlanCache pc = new PlanCache();
+        int n = this.joins.size();
+
+        CostCard costCard = null;
+        HashMap<Integer, Set<Set<LogicalJoinNode>>> sizeToJoins = buildMap(this.joins);
+        for(int i = 1; i <= n; i ++ ){
+            Set<Set<LogicalJoinNode>> sets = sizeToJoins.get(i);
+            for(Set<LogicalJoinNode> subset: sets){
+                double bestCost = Double.MAX_VALUE;
+                for(LogicalJoinNode removedNode: subset){
+                    final CostCard cc = computeCostAndCardOfSubplan(stats, filterSelectivities, removedNode, subset,
+                            bestCost, pc);
+                    if(cc != null){
+                        bestCost = cc.cost;
+                        costCard = cc;
+                    }
+                }
+                if(bestCost != Double.MAX_VALUE){
+                    pc.addPlan(subset, bestCost, costCard.card, costCard.plan);
+                }
+            }
+        }
+        if (costCard != null) {
+            return costCard.plan;
+        } else {
+            return joins;
+        }
     }
 
+    public <T> HashMap<Integer, Set<Set<T>>> buildMap(List<T> v) {
+
+        final HashMap<Integer, Set<Set<T>>> result = new HashMap<>();
+        int n = v.size();
+        int state = 0;
+        while(state < (1 << n)){
+            Set<T> cur = new HashSet<>();
+            for(int j = 0; j < n; j ++ ){
+                if(((state >> j) & 1) == 1){
+                    cur.add(v.get(j));
+                }
+            }
+            int count = Integer.bitCount(state);
+            if(result.containsKey(count)){
+                result.get(count).add(cur);
+            }else{
+                Set<Set<T>> value = new HashSet<>();
+                value.add(cur);
+                result.put(count, value);
+            }
+            state ++ ;
+        }
+        return result;
+    }
     // ===================== Private Methods =================================
 
     /**

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 
 /** A PlanCache is a helper class that can be used to store the best
  * way to order a given set of joins */
