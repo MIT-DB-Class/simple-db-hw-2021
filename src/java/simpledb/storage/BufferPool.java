@@ -4,15 +4,13 @@ import simpledb.common.Database;
 import simpledb.common.Permissions;
 import simpledb.common.DbException;
 import simpledb.common.DeadlockException;
+import simpledb.transaction.LockManager;
 import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
 import java.io.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -41,6 +39,7 @@ public class BufferPool {
     public Map<PageId, Page> pageCache;
 
     private final ConcurrentLinkedDeque<PageId> pageOrd;
+    private final LockManager lockManager;
 
     private int numPages;
 
@@ -54,6 +53,8 @@ public class BufferPool {
         this.numPages = numPages;
         pageCache = new ConcurrentHashMap<>();
         pageOrd = new ConcurrentLinkedDeque<>();
+        lockManager = new LockManager();
+
     }
 
     public static int getPageSize() {
@@ -87,15 +88,17 @@ public class BufferPool {
      */
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
+        final int acquireLockTimeout = new Random().nextInt(2000) + 1000;
+        if(!lockManager.tryAcquireLock(pid, tid, perm == Permissions.READ_ONLY ? 0 : 1, acquireLockTimeout)){
+            throw new TransactionAbortedException();
+        };
         // some code goes here
         if(!pageCache.containsKey(pid)){
             if (pageCache.size() >= numPages)
                 evictPage();
             DbFile file = Database.getCatalog().getDatabaseFile(pid.getTableId());
             Page page = file.readPage(pid);
-
             pageCache.put(pid, page);
-
             pageOrd.add(pid);
         }else{
             pageOrd.remove(pid);
@@ -116,6 +119,7 @@ public class BufferPool {
     public  void unsafeReleasePage(TransactionId tid, PageId pid) {
         // some code goes here
         // not necessary for lab1|lab2
+        lockManager.releaseLock(pid, tid);
     }
 
     /**
