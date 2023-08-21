@@ -22,6 +22,7 @@ public class IntHistogramTest {
 		// 128mb allocated heap (4-byte integers)
 		// If this fails, someone's storing every value...
 		for (int c = 0; c < 33554432; c++) {
+			System.out.println("-=-=-=-=-= doing: " + String.valueOf(c) + "-=-=-=-=-=-=-=-=");
 			h.addValue((c * 23) % 101);	// Pseudo-random number; at least get a distribution
 		}
 		
