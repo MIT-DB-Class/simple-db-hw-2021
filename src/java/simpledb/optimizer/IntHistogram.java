@@ -10,11 +10,11 @@ public class IntHistogram implements Histogram<Integer> {
 
     private int   maxVal;
     private int   minVal;
-    private int[] heights;
     private int   buckets;
     private int   totalTuples;
     private int   width;
     private int   lastBucketWidth;
+    private BinaryIndexedTree bit;
 
     /**
      * Create a new IntHistogram.
@@ -37,7 +37,7 @@ public class IntHistogram implements Histogram<Integer> {
         this.minVal = min;
         this.maxVal = max;
         this.buckets = buckets;
-        this.heights = new int[buckets];
+        this.bit = new BinaryIndexedTree(buckets);
         int total = max - min + 1;
         this.width = Math.max(total / buckets, 1);
         this.lastBucketWidth = total - (this.width * (buckets - 1));
@@ -53,12 +53,13 @@ public class IntHistogram implements Histogram<Integer> {
         if (v < this.minVal || v > this.maxVal) {
             return;
         }
+
         int bucketIndex = (v - this.minVal) / this.width;
         if (bucketIndex >= this.buckets) {
             return;
         }
         this.totalTuples++;
-        this.heights[bucketIndex]++;
+        this.bit.add(bucketIndex + 1, 1);
     }
 
     private double estimateGreater(int bucketIndex, int predicateValue, int bucketWidth) {
@@ -72,12 +73,8 @@ public class IntHistogram implements Histogram<Integer> {
         // As the lab3 doc, result = ((right - val) / bucketWidth) * (bucketTuples / totalTuples)
         int bucketRight = bucketIndex * this.width + this.minVal;
         double bucketRatio = (bucketRight - predicateValue) * 1.0 / bucketWidth;
-        double result = bucketRatio * (this.heights[bucketIndex] * 1.0 / this.totalTuples);
-
-        int sum = 0;
-        for (int i = bucketIndex + 1; i < this.buckets; i++) {
-            sum += this.heights[i];
-        }
+        double result = bucketRatio * ((bit.index(bucketIndex + 1) * 1.0) / totalTuples);
+        int sum = (int) (bit.cnt - bit.query(bucketIndex + 1));
         return (sum * 1.0) / this.totalTuples + result;
     }
 
@@ -86,7 +83,7 @@ public class IntHistogram implements Histogram<Integer> {
             return 0;
         }
         // As the lab3 doc, result = (bucketHeight / bucketWidth) / totalTuples
-        double result = this.heights[bucketIndex];
+        double result = bit.index(bucketIndex + 1);
         result = result / bucketWidth;
         result = result / this.totalTuples;
         return result;
@@ -149,7 +146,7 @@ public class IntHistogram implements Histogram<Integer> {
      */
     @Override
     public String toString() {
-        return "IntHistogram{" + "maxVal=" + maxVal + ", minVal=" + minVal + ", heights=" + Arrays.toString(heights)
+        return "IntHistogram{" + "maxVal=" + maxVal + ", minVal=" + minVal + ", heights="
                 + ", buckets=" + buckets + ", totalTuples=" + totalTuples + ", width=" + width + ", lastBucketWidth="
                 + lastBucketWidth + '}';
     }
