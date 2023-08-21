@@ -128,8 +128,7 @@ public class BufferPool {
      * @param tid the ID of the transaction requesting the unlock
      */
     public void transactionComplete(TransactionId tid) {
-        // some code goes here
-        // not necessary for lab1|lab2
+        transactionComplete(tid, true);
     }
 
     /** Return true if the specified transaction has a lock on the specified page */
@@ -147,8 +146,37 @@ public class BufferPool {
      * @param commit a flag indicating whether we should commit or abort
      */
     public void transactionComplete(TransactionId tid, boolean commit) {
-        // some code goes here
-        // not necessary for lab1|lab2
+        try {
+            if (commit) {
+                flushPages(tid);
+            } else {
+                Iterator<Map.Entry<PageId, Page>> entryIterator = pageCache.entrySet().iterator();
+                List<PageId> pagesToReload = new ArrayList<>();
+                while (entryIterator.hasNext()) {
+                    Map.Entry<PageId, Page> entry = entryIterator.next();
+                    if (entry.getValue().isDirty() != null && entry.getValue().isDirty().equals(tid)) {
+                        discardPage(entry.getKey());
+                        // To prevent reloading a page from disk while iterating through the cache,
+                        // we'll gather the pages to be reloaded in a list and handle them after the loop.
+                        // This ensures that the current iteration over pageCache isn't interfered with.
+                        pagesToReload.add(entry.getKey());
+                        entryIterator.remove();  // removes the current entry from the pageCache map
+                    }
+                }
+                // Now, handle reloading the pages from disk.
+                for (PageId pageId : pagesToReload) {
+                    Page pageFromDisk = Database.getBufferPool().getPage(tid, pageId, Permissions.READ_ONLY);
+                    pageCache.put(pageId, pageFromDisk);
+                    if (pageCache.size() > numPages) {
+                        evictPage();
+                    }
+                }
+
+            }
+            lockManager.releaseLockByTid(tid);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -234,8 +262,8 @@ public class BufferPool {
         are removed from the cache so they can be reused safely
     */
     public synchronized void discardPage(PageId pid) {
-        // some code goes here
-        // not necessary for lab1
+        pageCache.remove(pid);
+        pageOrd.remove(pid);
     }
 
     /**
@@ -247,8 +275,7 @@ public class BufferPool {
             Page p = pageCache.get(pid);
             Database.getCatalog().getDatabaseFile(pid.getTableId()).writePage(p);
             p.markDirty(false, null);
-            pageCache.remove(pid);
-            pageOrd.remove(pid);
+            discardPage(pid);
         }
 
     }
@@ -257,7 +284,13 @@ public class BufferPool {
      */
     public synchronized  void flushPages(TransactionId tid) throws IOException {
         // some code goes here
-        // not necessary for lab1|lab2
+        Iterator<Map.Entry<PageId, Page>> entryIterator = pageCache.entrySet().iterator();
+        while(entryIterator.hasNext()){
+            Map.Entry<PageId, Page> cur = entryIterator.next();
+            if(cur.getValue().isDirty() != null && cur.getValue().isDirty().equals(tid)){
+                flushPage(cur.getKey());
+            }
+        }
     }
 
     /**

@@ -133,7 +133,7 @@ public class HeapFile implements DbFile {
         boolean foundEmptySlot = false;
         HeapPage newPage = null;
         while(curPageNumber < numPages()){
-            newPage = (HeapPage) Database.getBufferPool().getPage(tid, new HeapPageId(getId(),curPageNumber), Permissions.READ_ONLY);
+            newPage = (HeapPage) Database.getBufferPool().getPage(tid, new HeapPageId(getId(),curPageNumber), Permissions.READ_WRITE);
             if(newPage.getNumEmptySlots() > 0){
 
                 foundEmptySlot = true;
