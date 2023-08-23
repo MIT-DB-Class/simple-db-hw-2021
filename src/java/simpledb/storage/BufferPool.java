@@ -1,16 +1,15 @@
 package simpledb.storage;
 
 import simpledb.common.Database;
-import simpledb.common.Permissions;
 import simpledb.common.DbException;
-import simpledb.common.DeadlockException;
+import simpledb.common.Permissions;
 import simpledb.transaction.LockManager;
 import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
 import java.io.*;
-
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -26,22 +25,27 @@ import java.util.concurrent.ConcurrentLinkedDeque;
  * @Threadsafe, all fields are final
  */
 public class BufferPool {
-    /** Bytes per page, including header. */
+    /**
+     * Bytes per page, including header.
+     */
     private static final int DEFAULT_PAGE_SIZE = 4096;
 
     private static int pageSize = DEFAULT_PAGE_SIZE;
 
-    /** Default number of pages passed to the constructor. This is used by
-    other classes. BufferPool should use the numPages argument to the
-    constructor instead. */
-    public static final int DEFAULT_PAGES = 50;
-
-    public Map<PageId, Page> pageCache;
+    private final ConcurrentHashMap<PageId, Page> pages;
 
     private final ConcurrentLinkedDeque<PageId> pageOrd;
-    private final LockManager lockManager;
 
-    private int numPages;
+    private final int numPages;
+
+    private final LockManager lm;
+
+    /**
+     * Default number of pages passed to the constructor. This is used by
+     * other classes. BufferPool should use the numPages argument to the
+     * constructor instead.
+     */
+    public static final int DEFAULT_PAGES = 50;
 
     /**
      * Creates a BufferPool that caches up to numPages pages.
@@ -50,25 +54,24 @@ public class BufferPool {
      */
     public BufferPool(int numPages) {
         // some code goes here
-        this.numPages = numPages;
-        pageCache = new ConcurrentHashMap<>();
+        pages = new ConcurrentHashMap<>();
         pageOrd = new ConcurrentLinkedDeque<>();
-        lockManager = new LockManager();
-
+        this.numPages = numPages;
+        lm = new LockManager();
     }
 
     public static int getPageSize() {
-      return pageSize;
+        return pageSize;
     }
 
     // THIS FUNCTION SHOULD ONLY BE USED FOR TESTING!!
     public static void setPageSize(int pageSize) {
-    	BufferPool.pageSize = pageSize;
+        BufferPool.pageSize = pageSize;
     }
 
     // THIS FUNCTION SHOULD ONLY BE USED FOR TESTING!!
     public static void resetPageSize() {
-    	BufferPool.pageSize = DEFAULT_PAGE_SIZE;
+        BufferPool.pageSize = DEFAULT_PAGE_SIZE;
     }
 
     /**
@@ -82,29 +85,24 @@ public class BufferPool {
      * space in the buffer pool, a page should be evicted and the new page
      * should be added in its place.
      *
-     * @param tid the ID of the transaction requesting the page
-     * @param pid the ID of the requested page
+     * @param tid  the ID of the transaction requesting the page
+     * @param pid  the ID of the requested page
      * @param perm the requested permissions on the page
      */
-    public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
-        throws TransactionAbortedException, DbException {
-        final int acquireLockTimeout = new Random().nextInt(2000) + 1000;
-        if(!lockManager.tryAcquireLock(pid, tid, perm == Permissions.READ_ONLY ? 0 : 1, acquireLockTimeout)){
-            throw new TransactionAbortedException();
-        };
+    public Page getPage(TransactionId tid, PageId pid, Permissions perm)
+            throws TransactionAbortedException, DbException {
         // some code goes here
-        if(!pageCache.containsKey(pid)){
-            if (pageCache.size() >= numPages)
-                evictPage();
-            DbFile file = Database.getCatalog().getDatabaseFile(pid.getTableId());
-            Page page = file.readPage(pid);
-            pageCache.put(pid, page);
+        lm.grantLock(tid, pid, perm);
+        if (!pages.containsKey(pid)) {
+            if (pages.size() >= numPages)
+                evictPage(tid);
+            pages.put(pid, Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid));
             pageOrd.add(pid);
-        }else{
+        } else {
             pageOrd.remove(pid);
             pageOrd.add(pid);
         }
-        return pageCache.get(pid);
+        return pages.get(pid);
     }
 
     /**
@@ -116,10 +114,10 @@ public class BufferPool {
      * @param tid the ID of the transaction requesting the unlock
      * @param pid the ID of the page to unlock
      */
-    public  void unsafeReleasePage(TransactionId tid, PageId pid) {
+    public void releasePage(TransactionId tid, PageId pid) {
         // some code goes here
         // not necessary for lab1|lab2
-        lockManager.releaseLock(pid, tid);
+        lm.releaseLock(tid, pid);
     }
 
     /**
@@ -127,55 +125,47 @@ public class BufferPool {
      *
      * @param tid the ID of the transaction requesting the unlock
      */
-    public void transactionComplete(TransactionId tid) {
+    public void transactionComplete(TransactionId tid){
+        // some code goes here
+        // not necessary for lab1|lab2
         transactionComplete(tid, true);
     }
 
-    /** Return true if the specified transaction has a lock on the specified page */
+    /**
+     * Return true if the specified transaction has a lock on the specified page
+     */
     public boolean holdsLock(TransactionId tid, PageId p) {
         // some code goes here
         // not necessary for lab1|lab2
-        return false;
+        return lm.holdLock(tid, p);
     }
 
     /**
      * Commit or abort a given transaction; release all locks associated to
      * the transaction.
      *
-     * @param tid the ID of the transaction requesting the unlock
+     * @param tid    the ID of the transaction requesting the unlock
      * @param commit a flag indicating whether we should commit or abort
      */
     public void transactionComplete(TransactionId tid, boolean commit) {
-        try {
-            if (commit) {
+        // some code goes here
+        // not necessary for lab1|lab2
+        Set<LockManager.PageLock> s = lm.getPages(tid);
+        if (commit) {
+            try{
                 flushPages(tid);
-            } else {
-                Iterator<Map.Entry<PageId, Page>> entryIterator = pageCache.entrySet().iterator();
-                List<PageId> pagesToReload = new ArrayList<>();
-                while (entryIterator.hasNext()) {
-                    Map.Entry<PageId, Page> entry = entryIterator.next();
-                    if (entry.getValue().isDirty() != null && entry.getValue().isDirty().equals(tid)) {
-                        discardPage(entry.getKey());
-                        // To prevent reloading a page from disk while iterating through the cache,
-                        // we'll gather the pages to be reloaded in a list and handle them after the loop.
-                        // This ensures that the current iteration over pageCache isn't interfered with.
-                        pagesToReload.add(entry.getKey());
-                        entryIterator.remove();  // removes the current entry from the pageCache map
-                    }
-                }
-                // Now, handle reloading the pages from disk.
-                for (PageId pageId : pagesToReload) {
-                    Page pageFromDisk = Database.getBufferPool().getPage(tid, pageId, Permissions.READ_ONLY);
-                    pageCache.put(pageId, pageFromDisk);
-                    if (pageCache.size() > numPages) {
-                        evictPage();
-                    }
-                }
-
+            } catch (Exception e){
+                e.printStackTrace();
             }
-            lockManager.releaseLockByTid(tid);
-        } catch (Exception e) {
-            e.printStackTrace();
+
+        } else {
+            for (LockManager.PageLock l: s) {
+                discardPage(l.pid);
+            }
+        }
+
+        for (LockManager.PageLock l: s) {
+            releasePage(tid, l.pid);
         }
     }
 
@@ -184,29 +174,36 @@ public class BufferPool {
      * acquire a write lock on the page the tuple is added to and any other
      * pages that are updated (Lock acquisition is not needed for lab2).
      * May block if the lock(s) cannot be acquired.
-     *
+     * <p>
      * Marks any pages that were dirtied by the operation as dirty by calling
      * their markDirty bit, and adds versions of any pages that have
      * been dirtied to the cache (replacing any existing versions of those pages) so
      * that future requests see up-to-date pages.
      *
-     * @param tid the transaction adding the tuple
+     * @param tid     the transaction adding the tuple
      * @param tableId the table to add the tuple to
-     * @param t the tuple to add
+     * @param t       the tuple to add
      */
     public void insertTuple(TransactionId tid, int tableId, Tuple t)
-        throws DbException, IOException, TransactionAbortedException {
-        DbFile f = Database.getCatalog().getDatabaseFile(tableId);
-        List<Page> modifiedPages = f.insertTuple(tid, t);
+            throws DbException, IOException, TransactionAbortedException {
+        // some code goes here
+        // not necessary for lab1
+        DbFile db = Database.getCatalog().getDatabaseFile(tableId);
+        List<Page> modifiedPages = db.insertTuple(tid, t);
 
-        for(Page p: modifiedPages){
+        for (Page p : modifiedPages) {
             p.markDirty(true, tid);
             PageId pid = p.getId();
-            if(pageCache.replace(pid, p) == null){
-                if(pageCache.size() >= numPages){
-                    evictPage();
-                }
-                pageCache.put(pid, p);
+            // null when not existent
+            if (pages.replace(pid, p) == null) {
+                if (pages.size() >= numPages)
+                    evictPage(tid);
+                else
+                    pageOrd.add(pid);
+                pages.put(pid, p);
+            } else {
+                pageOrd.remove(pid);
+                pageOrd.add(pid);
             }
         }
 
@@ -216,28 +213,35 @@ public class BufferPool {
      * Remove the specified tuple from the buffer pool.
      * Will acquire a write lock on the page the tuple is removed from and any
      * other pages that are updated. May block if the lock(s) cannot be acquired.
-     *
+     * <p>
      * Marks any pages that were dirtied by the operation as dirty by calling
      * their markDirty bit, and adds versions of any pages that have
      * been dirtied to the cache (replacing any existing versions of those pages) so
      * that future requests see up-to-date pages.
      *
      * @param tid the transaction deleting the tuple.
-     * @param t the tuple to delete
+     * @param t   the tuple to delete
      */
-    public  void deleteTuple(TransactionId tid, Tuple t)
-        throws DbException, IOException, TransactionAbortedException {
-        DbFile f = Database.getCatalog().getDatabaseFile(t.getRecordId().getPageId().getTableId());
-        List<Page> modifiedPages = f.deleteTuple(tid, t);
+    public void deleteTuple(TransactionId tid, Tuple t)
+            throws DbException, IOException, TransactionAbortedException {
+        // some code goes here
+        // not necessary for lab1
+        List<Page> modifiedPages = Database.getCatalog().getDatabaseFile(
+                t.getRecordId().getPageId().getTableId()).deleteTuple(tid, t);
 
-        for(Page p: modifiedPages){
+        for (Page p : modifiedPages) {
             p.markDirty(true, tid);
             PageId pid = p.getId();
-            if(pageCache.replace(pid, p) == null){
-                if(pageCache.size() >= numPages){
-                    evictPage();
-                }
-                pageCache.put(pid, p);
+            // null when not existent
+            if (pages.replace(pid, p) == null) {
+                if (pages.size() >= numPages)
+                    evictPage(tid);
+                else
+                    pageOrd.add(pid);
+                pages.put(pid, p);
+            } else {
+                pageOrd.remove(pid);
+                pageOrd.add(pid);
             }
         }
     }
@@ -245,50 +249,67 @@ public class BufferPool {
     /**
      * Flush all dirty pages to disk.
      * NB: Be careful using this routine -- it writes dirty data to disk so will
-     *     break simpledb if running in NO STEAL mode.
+     * break simpledb if running in NO STEAL mode.
      */
     public synchronized void flushAllPages() throws IOException {
         // some code goes here
         // not necessary for lab1
-
+        for (PageId pid : pages.keySet()) {
+            flushPage(pid);
+        }
     }
 
-    /** Remove the specific page id from the buffer pool.
-        Needed by the recovery manager to ensure that the
-        buffer pool doesn't keep a rolled back page in its
-        cache.
-
-        Also used by B+ tree files to ensure that deleted pages
-        are removed from the cache so they can be reused safely
-    */
+    /**
+     * Remove the specific page id from the buffer pool.
+     * Needed by the recovery manager to ensure that the
+     * buffer pool doesn't keep a rolled back page in its
+     * cache.
+     * <p>
+     * Also used by B+ tree files to ensure that deleted pages
+     * are removed from the cache so they can be reused safely
+     */
     public synchronized void discardPage(PageId pid) {
-        pageCache.remove(pid);
-        pageOrd.remove(pid);
+        // some code goes here
+        // not necessary for lab1
+        if (pid != null) {
+            pages.remove(pid);
+            pageOrd.remove(pid);
+        }
     }
 
     /**
      * Flushes a certain page to disk
+     *
      * @param pid an ID indicating the page to flush
      */
-    private synchronized  void flushPage(PageId pid) throws IOException {
-        if(pid != null){
-            Page p = pageCache.get(pid);
+    private synchronized void flushPage(PageId pid) throws IOException {
+        // some code goes here
+        // not necessary for lab1
+        if (pid != null) {
+            Page p = pages.get(pid);
             Database.getCatalog().getDatabaseFile(pid.getTableId()).writePage(p);
             p.markDirty(false, null);
-            discardPage(pid);
+            pages.remove(pid);
+            pageOrd.remove(pid);
         }
-
     }
 
-    /** Write all pages of the specified transaction to disk.
+    /**
+     * Write all pages of the specified transaction to disk.
      */
-    public synchronized  void flushPages(TransactionId tid) throws IOException {
+    public synchronized void flushPages(TransactionId tid) throws IOException {
         // some code goes here
-        Iterator<Map.Entry<PageId, Page>> entryIterator = pageCache.entrySet().iterator();
-        while(entryIterator.hasNext()){
-            Map.Entry<PageId, Page> cur = entryIterator.next();
-            if(cur.getValue().isDirty() != null && cur.getValue().isDirty().equals(tid)){
-                flushPage(cur.getKey());
+        // not necessary for lab1|lab2
+        Set<LockManager.PageLock> s = lm.getPages(tid);
+        for (LockManager.PageLock l: s) {
+            /* this transaction finishes, we can only flush those with read lock
+            and there is no other transaction holding this page, or current transaction
+            holds a write lock on this page
+            */
+            if (((l.perm.equals(Permissions.READ_ONLY) && l.holdNum == 1)
+                    || l.perm.equals(Permissions.READ_WRITE))
+                    && pages.containsKey(l.pid)) {
+                flushPage(l.pid);
             }
         }
     }
@@ -297,11 +318,11 @@ public class BufferPool {
      * Discards a page from the buffer pool.
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
-    private synchronized  void evictPage() throws DbException {
+    private synchronized void evictPage(TransactionId tid) throws DbException {
         PageId pid = null;
         boolean found = false;
         for (PageId id: pageOrd) {
-            if (pageCache.get(id).isDirty() == null) {
+            if (pages.get(id).isDirty() == null) {
                 pid = id;
                 found = true;
                 break;
@@ -316,6 +337,7 @@ public class BufferPool {
         } else {
             throw new DbException("No clean page to evict!");
         }
+
     }
 
 }
