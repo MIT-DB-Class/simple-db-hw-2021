@@ -39,7 +39,6 @@ public class EvictionTest extends SimpleDbTestBase {
         scan.open();
         while (scan.hasNext()) {
             Tuple cur = scan.next();
-            System.out.println(Database.getBufferPool().pageCache.size());
 
         }
         System.out.println("EvictionTest scan complete, testing memory usage of scan");
