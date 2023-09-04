@@ -674,8 +674,8 @@ public class BTreeFile implements DbFile {
 		Tuple tuple = null;
 		while(it.hasNext() && curTuple < target){
 			tuple = it.next();
-			page.insertTuple(tuple);
 			sibling.deleteTuple(tuple);
+			page.insertTuple(tuple);
 			curTuple++;
 		}
 		Tuple mid = it.next();
