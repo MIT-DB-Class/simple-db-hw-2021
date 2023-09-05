@@ -287,6 +287,11 @@ public class BufferPool {
         // not necessary for lab1
         if (pid != null) {
             Page p = pages.get(pid);
+            TransactionId dirtier = p.isDirty();
+            if (dirtier != null){
+                Database.getLogFile().logWrite(dirtier, p.getBeforeImage(), p);
+                Database.getLogFile().force();
+            }
             Database.getCatalog().getDatabaseFile(pid.getTableId()).writePage(p);
             p.markDirty(false, null);
             pages.remove(pid);
