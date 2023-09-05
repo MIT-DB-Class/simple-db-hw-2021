@@ -460,6 +460,50 @@ public class LogFile {
             synchronized(this) {
                 preAppend();
                 // some code goes here
+                // 1. Find the first record of logfile and move to there
+                final Long firstRecordPosition = this.tidToFirstLogRecord.get(tid.getId());
+                this.raf.seek(firstRecordPosition);
+                final HashSet<PageId> set = new HashSet<>();
+                // 2. keep reading record
+                while(true){
+                    try {
+                        // 2.a read type
+                        final int type = this.raf.readInt();
+                        // 2.b read txnId
+                        final long txnId = this.raf.readLong();
+                        switch (type){
+                            case UPDATE_RECORD: {
+                                // 2.1.a read the page
+                                final Page beginPage = readPageData(this.raf);
+                                // skip one page
+                                readPageData(this.raf);
+                                final PageId pageId = beginPage.getId();
+                                // 2.1.b possible that duplicate page, record the successfully flushed page
+                                if(txnId == tid.getId() && !set.contains(pageId)){
+                                    // 2.1.c discard page from buffer and flush it to file system
+                                    Database.getBufferPool().discardPage(beginPage.getId());
+                                    Database.getCatalog().getDatabaseFile(pageId.getTableId()).writePage(beginPage);
+                                    // 2.1.d add it to set after write success
+                                    set.add(pageId);
+                                }
+                                break;
+                            }
+                            case CHECKPOINT_RECORD: {
+                                // 2.2.a skip the checkpoint record bytes
+                                final int txnCnt = this.raf.readInt();
+                                final int skip = txnCnt * 2 * 8;
+                                this.raf.skipBytes(skip);
+                                break;
+                            }
+
+
+                        }
+                        raf.readLong();
+                    } catch (Exception e){
+                        break;
+                    }
+                }
+
             }
         }
     }
@@ -487,6 +531,66 @@ public class LogFile {
             synchronized (this) {
                 recoveryUndecided = false;
                 // some code goes here
+                this.raf.seek(0);
+                final long cp = raf.readLong();
+                if (cp > 0) {
+                    this.raf.seek(cp);
+                }
+                final HashSet<Long> commitIds = new HashSet<>();
+                final HashMap<Long, List<Page>> beforePages = new HashMap<>();
+                final HashMap<Long, List<Page>> afterPages = new HashMap<>();
+                while (true) {
+                    try {
+                        final int type = this.raf.readInt();
+                        final long tid = this.raf.readLong();
+                        switch (type) {
+                            case UPDATE_RECORD: {
+                                final Page beforePage = readPageData(raf);
+                                final Page afterPage = readPageData(raf);
+
+                                final List<Page> beforeList = beforePages.getOrDefault(tid, new ArrayList<>());
+                                beforeList.add(beforePage);
+
+                                final List<Page> afterList = afterPages.getOrDefault(tid, new ArrayList<>());
+                                afterList.add(afterPage);
+                                break;
+                            }
+                            case COMMIT_RECORD: {
+                                commitIds.add(tid);
+                                break;
+                            }
+                            case CHECKPOINT_RECORD: {
+                                final int txnCnt = this.raf.readInt();
+                                final int skip = txnCnt * 2 * 8;
+                                this.raf.skipBytes(skip);
+                                break;
+                            }
+                        }
+                    } catch (final EOFException e) {
+                        break;
+                    }
+                }
+                // Roll back unCommitted txn
+                beforePages.forEach((tid, pages) -> {
+                    if (!commitIds.contains(tid)) {
+                        for (final Page page : pages) {
+                            try {
+                                Database.getCatalog().getDatabaseFile(page.getId().getTableId()).writePage(page);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                });
+                // Write commit pages
+                for (final Long commitId : commitIds) {
+                    if (afterPages.containsKey(commitId)) {
+                        final List<Page> pages = afterPages.get(commitId);
+                        for (final Page page : pages) {
+                            Database.getCatalog().getDatabaseFile(page.getId().getTableId()).writePage(page);
+                        }
+                    }
+                }
             }
          }
     }
